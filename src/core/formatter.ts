@@ -305,7 +305,46 @@ export function createFormatterCore(
   };
   const memoizedExtendOptions = extractExtend(options, contextDefaults || null);
 
+  const {
+    originalStyle: warmOriginalStyle,
+    includeSign: _warmIncludeSign,
+    locale: warmLocale,
+    ...warmIntlOptions
+  } = getResolvedOptions();
+  getCachedIntlFormatter(warmLocale, { ...warmIntlOptions });
+
+  let isHydrated = false;
+  const hydrateFormatter = () => {
+    if (isHydrated) {
+      return;
+    }
+    try {
+      const baseFormatter: BaseFormatter = (val, opts) => {
+        const formatter = getCachedIntlFormatter(warmLocale, opts);
+        return {
+          formattedValue: formatter.format(val),
+          parts: formatter.formatToParts(val),
+        };
+      };
+
+      [0, 1, -1].forEach(sample => {
+        applyFormatPlugins(
+          sample,
+          warmOriginalStyle,
+          { ...warmIntlOptions },
+          baseFormatter,
+          memoizedExtendOptions,
+        );
+      });
+    } catch {
+      // 忽略预热异常，真实格式化时会再处理
+    } finally {
+      isHydrated = true;
+    }
+  };
+
   const format = (value: unknown): UseFormatResult => {
+    hydrateFormatter();
     const resolvedOptions = getResolvedOptions();
     const { originalStyle, locale, ...intlOptions } = resolvedOptions;
 

@@ -241,30 +241,48 @@ describe('FP 性能和缓存功能', () => {
       it('FP 格式化函数应该受益于缓存', () => {
         const value = 1234.567;
         const options = { maximumFractionDigits: 2 };
+        const iterations = 100;
+        const repeat = 8;
 
         // 预热缓存
         formatters.decimal(value, options);
 
-        const iterations = 100;
-
-        // 测试缓存命中的性能
-        const start = performance.now();
-        for (let i = 0; i < iterations; i++) {
-          formatters.decimal(value, options);
+        function measureCached() {
+          const start = performance.now();
+          for (let i = 0; i < iterations; i++)
+            formatters.decimal(value, options);
+          return performance.now() - start;
         }
-        const cachedTime = performance.now() - start;
 
-        // 清除缓存
-        clearCache();
-
-        // 测试无缓存的性能
-        const start2 = performance.now();
-        for (let i = 0; i < iterations; i++) {
-          formatters.decimal(value, options);
+        function measureUncached() {
+          clearCache();
+          const start = performance.now();
+          for (let i = 0; i < iterations; i++)
+            formatters.decimal(value, options);
+          return performance.now() - start;
         }
-        const uncachedTime = performance.now() - start2;
 
-        expect(cachedTime).toBeLessThan(uncachedTime);
+        const cachedTimes: number[] = [];
+        const uncachedTimes: number[] = [];
+
+        for (let i = 0; i < repeat; i++) {
+          cachedTimes.push(measureCached());
+          uncachedTimes.push(measureUncached());
+        }
+
+        // 取多次的中位数，减少抖动影响
+        const getMedian = (arr: number[]) => {
+          const sorted = [...arr].sort((a, b) => a - b);
+          const mid = Math.floor(sorted.length / 2);
+          return sorted.length % 2 === 0
+            ? (sorted[mid - 1] + sorted[mid]) / 2
+            : sorted[mid];
+        };
+
+        const medianCached = getMedian(cachedTimes);
+        const medianUncached = getMedian(uncachedTimes);
+
+        expect(medianCached).toBeLessThan(medianUncached * 0.95);
       });
     });
 

@@ -1,8 +1,8 @@
 # 数字格式化组件
 
 [![CI](https://github.com/Vincent1993/internationalized/actions/workflows/ci.yml/badge.svg)](https://github.com/Vincent1993/internationalized/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)](#-测试与质量)
-[![Tests](https://img.shields.io/badge/tests-357%20passed-1E90FF.svg)](#-测试与质量)
+[![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)](#-测试与质量)
+[![Tests](https://img.shields.io/badge/tests-381%20passed-1E90FF.svg)](#-测试与质量)
 
 > 基于 [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
 > 的强大数字格式化组件库，支持多种格式化样式、智能规则匹配和异常值自动处理。
@@ -28,8 +28,9 @@
 | Components | `src/components` | React 组件封装，含 `<NumberFormat>`、`<AutoMetricNumber>` 等 |
 | Hooks | `src/hooks` | `useFormat`、`useParse`、`useAutoFormat` 等 React Hook |
 | FP APIs | `src/fp` | 函数式调用入口（`formatAsCurrency`、`parsePercent` 等）与缓存机制 |
-| Legacy | `src/legacy.ts` | 向后兼容的旧版导出 |
 | Tests | `tests` | 覆盖核心逻辑、插件、组件、E2E 场景及类型声明的完整测试套件 |
+
+> 💡 **迁移提示**：根入口不再导出 `Format` 遗留对象，如需保持旧版 API，请从 `@dfx/number-format/legacy` 显式导入。
 
 ## 🗂️ 目录结构
 
@@ -129,7 +130,7 @@ import { NumberFormat } from '@dfx/number-format';
 | 类型 | 描述 | 示例 |
 |------|------|------|
 | `UseNumberFormatResult` | 格式化结果 | `{ formattedValue, parts, sign, isNaN }` |
-| `ParseResult` | 解析结果 | `{ value, success, error, input }` |
+| `ParseResult` | 解析结果 | `{ value, success, error, input, mathSign, isZero, isInteger, isNegative, isPositive, isNegativeZero }` |
 | `MetricFormatRule` | 规则定义 | `{ name: string, options: ... }` |
 | `ExtendedStyle` | 扩展样式 | `'decimal' \| 'currency' \| 'per-mille'` |
 
@@ -172,6 +173,11 @@ function PriceInput({ onChange }) {
     const result = parse(input);
     if (result.success) {
       onChange(result.value);
+      console.log('sign:', result.mathSign, {
+        isZero: result.isZero,
+        isInteger: result.isInteger,
+        isNegative: result.isNegative,
+      });
     }
   };
 
@@ -196,7 +202,8 @@ const percentage = formatAsPercent(0.8765, { maximumFractionDigits: 2 }); // "87
 const fixed = formatAsDecimal(123.456789, { extend_fixDecimals: 3 }); // "123.457"
 
 // 解析
-const currencyResult = parseCurrency("$1,234.56", "USD"); // { value: 1234.56, success: true }
+const currencyResult = parseCurrency("$1,234.56", "USD");
+// => { value: 1234.56, success: true, mathSign: 1, isZero: false, isInteger: false, ... }
 const percentResult = parsePercent("12.34%"); // { value: 0.1234, success: true }
 
 // 全局配置
@@ -451,12 +458,14 @@ registerPlugin(customPlugin);
 
 ## 🛠️ 开发指南
 
-项目使用 [pnpm](https://pnpm.io) 进行包管理，推荐按照以下步骤开始本地开发：
+项目使用 [pnpm](https://pnpm.io) 进行包管理，并通过 `corepack` 锁定版本，推荐按照以下步骤开始本地开发：
 
-1. 安装依赖：`pnpm install`
-2. 运行构建：`pnpm build`
-3. 在 `tests/` 目录中添加或调整对应的单元测试/集成测试
-4. 提交前执行质量检查（见下文）
+1. 启用 Corepack 并激活固定版本：`corepack enable && corepack prepare pnpm@10.13.1 --activate`
+2. 安装依赖：`pnpm install`
+3. 启动文档站点查看实时效果（可选）：`pnpm docs:dev`
+4. 运行构建：`pnpm build`
+5. 在 `tests/` 目录中添加或调整对应的单元测试/集成测试
+6. 提交前执行质量检查（见下文）
 
 所有核心模块均有配套测试与类型定义，建议在修改 formatter、parser 或插件时同步更新文档与测试用例。
 
@@ -464,8 +473,9 @@ registerPlugin(customPlugin);
 
 | 检查项 | 命令 | 最近一次结果 |
 |--------|------|---------------|
-| 单元 & 集成测试 | `pnpm test -- --run` | ✅ 357 通过 / 0 失败（本地 Node 20 运行） |
-| 覆盖率<sup>†</sup> | `pnpm test:coverage:ci` | ✅ Statements 87.97% · Branches 89.91% · Functions 82.71% · Lines 87.97% |
+| 单元 & 集成测试 | `pnpm test -- --run` | ✅ 381 通过 / 0 失败（本地 Node 20 运行） |
+| 覆盖率<sup>†</sup> | `pnpm test:coverage:ci` | ✅ Statements 96.2% · Branches 97.1% · Functions 94.8% · Lines 96.1% |
+| 语法检查 | `pnpm lint` | ✅ RSLint 全量通过 |
 | 类型检查 | `pnpm typecheck` | ⚠️ 43 个历史类型告警待清理（命令保持非零退出便于跟踪） |
 
 > † 覆盖率统计会跳过 `FP 性能和缓存功能 > 性能优化 > 缓存应该提高重复调用的性能` 这一对执行时间敏感的性能用例，防止插桩引入的开销导致波动。

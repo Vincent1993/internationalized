@@ -1,0 +1,56 @@
+# 解析输出说明
+
+解析 API 除了返回数值本身，还会提供一组完整的符号信息，便于在 UI 或业务逻辑中做进一步处理。
+
+## 基本形态
+
+```ts
+import { parse } from 'internationalized/core';
+
+const result = parse('-1,234.50');
+```
+
+`result` 为：
+
+```ts
+{
+  value: -1234.5,
+  success: true,
+  error: null,
+  input: '-1,234.50',
+  mathSign: -1,
+  isZero: false,
+  isNegativeZero: false,
+  isPositive: false,
+  isNegative: true,
+  isInteger: false
+}
+```
+
+## 字段解释
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `mathSign` | `number` | `Math.sign` 的同源结果。返回 `-1`, `0`, `1` 或 `NaN`。 |
+| `isZero` | `boolean` | 是否为 0，包括 `-0`。 |
+| `isNegativeZero` | `boolean` | 是否严格等于 `-0`（通过 `Object.is` 判断）。 |
+| `isPositive` | `boolean` | 是否大于 0。 |
+| `isNegative` | `boolean` | 是否小于 0，或为 `-0`。 |
+| `isInteger` | `boolean` | 是否为整数。 |
+
+## 特殊值
+
+当输入无法解析为有效数字时：
+
+```ts
+const failed = parse('not a number');
+// failed.success === false
+// failed.mathSign === NaN
+// 其余布尔标识均为 false
+```
+
+Infinity、NaN 等特殊值同样兼容，可结合 `isFinite` 与上述字段进行处理。
+
+## 与插件协同
+
+所有内置与自定义插件的解析结果都会自动注入这些字段，无需额外配置。这确保了在处理千分制、百分比或自定义符号格式时也能获得一致的符号信息。

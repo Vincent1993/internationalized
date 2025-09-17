@@ -71,6 +71,26 @@ const mathConstants = {
   ZERO: '0',
 } as const;
 
+function decorateParseResult(result: ParseResult): ParseResult {
+  const value = result.value;
+  const mathSign = Number.isNaN(value) ? NaN : Math.sign(value);
+  const isNegativeZero = Object.is(value, -0);
+  const isZero = value === 0 || isNegativeZero;
+  const isPositive = value > 0;
+  const isNegative = value < 0 || isNegativeZero;
+  const isInteger = Number.isInteger(value);
+
+  return {
+    ...result,
+    mathSign,
+    isZero,
+    isNegativeZero,
+    isPositive,
+    isNegative,
+    isInteger,
+  };
+}
+
 /**
  * 解析结果接口
  */
@@ -83,6 +103,18 @@ export interface ParseResult {
   input: string;
   /** 错误信息，解析成功时为 null */
   error: string | null;
+  /** Math.sign 的解析结果，NaN 表示无法确定 */
+  mathSign: number;
+  /** 是否为零（包含 -0） */
+  isZero: boolean;
+  /** 是否为负零 */
+  isNegativeZero: boolean;
+  /** 是否为正数（不包含 -0） */
+  isPositive: boolean;
+  /** 是否为负数（包含 -0） */
+  isNegative: boolean;
+  /** 是否为整数 */
+  isInteger: boolean;
 }
 
 /**
@@ -139,12 +171,18 @@ export class NumberParser {
       success: false,
       input,
       error: null,
+      mathSign: Number.NaN,
+      isZero: false,
+      isNegativeZero: false,
+      isPositive: false,
+      isNegative: false,
+      isInteger: false,
     };
 
     // 输入验证
     if (typeof input !== 'string') {
       result.error = 'Input must be a string';
-      return result;
+      return decorateParseResult(result);
     }
 
     const trimmed = input.trim();
@@ -166,7 +204,7 @@ export class NumberParser {
     }, trimmed);
     if (trimmed === '') {
       result.error = 'Input is empty';
-      return result;
+      return decorateParseResult(result);
     }
 
     try {
@@ -175,7 +213,7 @@ export class NumberParser {
       if (specialValue !== null) {
         result.value = specialValue;
         result.success = true;
-        return result;
+        return decorateParseResult(result);
       }
 
       // 根据样式解析
@@ -202,7 +240,7 @@ export class NumberParser {
       }
     }, result);
 
-    return finalResult;
+    return decorateParseResult(finalResult);
   }
 
   /**

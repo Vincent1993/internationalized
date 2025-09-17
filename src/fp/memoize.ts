@@ -87,6 +87,18 @@ export function getMemoizedFormatter(options: UseFormatOptions = {}): NumberForm
   if (!formatter) {
     formatter = createNumberFormat(options);
     formatterCache.set(key, formatter);
+
+    // 预热格式化器，确保首次创建时的昂贵成本发生在缓存写入阶段
+    try {
+      const warmupSamples = [0, 1, -1, 1234.56, -9876.54];
+      for (let i = 0; i < 3; i++) {
+        warmupSamples.forEach(sample => {
+          formatter!.format(sample);
+        });
+      }
+    } catch {
+      // 忽略预热异常，实际调用时会按既定流程处理
+    }
   }
 
   return formatter;

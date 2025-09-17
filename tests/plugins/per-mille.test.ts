@@ -4,6 +4,7 @@
  */
 
 import { createNumberFormat } from '../../src/core/formatter';
+import { NumberParser } from '../../src/core/parser';
 import { resetPlugins } from '../../src/plugins/registry';
 import { perMillePluginGroup } from '../../src/plugins/per-mille';
 import { fallbackPlugin } from '../../src/plugins/fallback';
@@ -41,5 +42,25 @@ describe('千分比（Per-mille）插件组', () => {
     const formatter = createNumberFormat({ style: 'per-mille', includeSign: true });
     expect(formatter.format(0.123).formattedValue).toBe('123‰');
     expect(formatter.format(-0.456).formattedValue).toBe('-456‰');
+  });
+
+  describe('解析流程', () => {
+    it('在非严格模式下应自动去除‰并进行换算', () => {
+      const parser = new NumberParser({ style: 'per-mille', strict: false });
+      const result = parser.parse('123‰');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(0.123);
+    });
+
+    it('在严格模式下应保留‰并避免重复换算', () => {
+      const parser = new NumberParser({ style: 'per-mille', strict: true });
+      const withSymbol = parser.parse('123‰');
+      const withoutSymbol = parser.parse('123');
+
+      expect(withSymbol.success).toBe(true);
+      expect(withSymbol.value).toBeCloseTo(0.123);
+      expect(withoutSymbol.success).toBe(false);
+    });
   });
 });

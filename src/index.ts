@@ -57,6 +57,3 @@ export type {
   ContextAwareFallbackConfig,
   InputValueState,
 } from './plugins';
-
-// ==================== 遗留 API (向后兼容) ====================
-export { Format } from './legacy';

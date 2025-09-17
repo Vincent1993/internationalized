@@ -4,6 +4,14 @@
  */
 
 import { NumberParser, createNumberParser, parseNumber } from '../../src/core/parser';
+import { resetPlugins, clearRegisteredPlugins } from '../../src/plugins/registry';
+import type { FormatPlugin } from '../../src/plugins/types';
+import { perMillePluginGroup } from '../../src/plugins/per-mille';
+import { fallbackPlugin } from '../../src/plugins/fallback';
+import { validatorPlugin } from '../../src/plugins/validator';
+import { fixDecimalsPlugin } from '../../src/plugins/fix-decimals';
+
+const defaultPlugins = [validatorPlugin, perMillePluginGroup, fallbackPlugin, fixDecimalsPlugin];
 
 describe('NumberParser', () => {
   describe('基础解析功能', () => {
@@ -14,6 +22,10 @@ describe('NumberParser', () => {
       expect(result.success).toBe(true);
       expect(result.value).toBe(1234.56);
       expect(result.error).toBe(null);
+      expect(result.mathSign).toBe(1);
+      expect(result.isPositive).toBe(true);
+      expect(result.isInteger).toBe(false);
+      expect(result.isZero).toBe(false);
     });
 
     it('应该解析带分组分隔符的数字', () => {
@@ -30,6 +42,9 @@ describe('NumberParser', () => {
 
       expect(result.success).toBe(true);
       expect(result.value).toBe(-1234.56);
+      expect(result.mathSign).toBe(-1);
+      expect(result.isNegative).toBe(true);
+      expect(result.isInteger).toBe(false);
     });
 
     it('应该处理空字符串', () => {
@@ -124,6 +139,40 @@ describe('NumberParser', () => {
     });
   });
 
+  describe('紧凑和科学记数解析', () => {
+    it('应该解析紧凑表示法并处理中文单位', () => {
+      const parser = new NumberParser({ notation: 'compact' });
+      const result = parser.parse('12.5万');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(125000);
+    });
+
+    it('未知紧凑单位应该返回失败', () => {
+      const parser = new NumberParser({ notation: 'compact' });
+      const result = parser.parse('12.5X');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Unknown compact unit');
+    });
+
+    it('应该解析科学记数法', () => {
+      const parser = new NumberParser({ notation: 'scientific' });
+      const result = parser.parse('1.23E4');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(12300);
+    });
+
+    it('非法科学记数格式应该返回错误', () => {
+      const parser = new NumberParser({ notation: 'scientific' });
+      const result = parser.parse('1.23E');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Invalid scientific notation');
+    });
+  });
+
   describe('地区化支持', () => {
     it('应该支持德语地区格式', () => {
       const parser = new NumberParser({ locale: 'de-DE' });
@@ -145,9 +194,9 @@ describe('NumberParser', () => {
     });
   });
 
-  describe('选项更新', () => {
-    it('应该能更新解析器选项', () => {
-      const parser = new NumberParser();
+describe('选项更新', () => {
+  it('应该能更新解析器选项', () => {
+    const parser = new NumberParser();
 
       // 初始解析
       let result = parser.parse('$100');
@@ -158,7 +207,124 @@ describe('NumberParser', () => {
       result = parser.parse('$100');
       expect(result.success).toBe(true);
       expect(result.value).toBe(100);
+
+      const currentOptions = parser.getOptions();
+      expect(currentOptions.style).toBe('currency');
+      expect(currentOptions.currency).toBe('USD');
     });
+  });
+});
+
+describe('插件异常处理与极端情况', () => {
+  const throwingPrePlugin: FormatPlugin = {
+    name: 'throwing-pre-parse-plugin',
+    version: '1.0.0',
+    description: '用于测试的 pre-parse 插件',
+    priority: 10,
+    phase: 'pre-parse',
+    isApplicable: () => true,
+    processParseInput: () => {
+      throw new Error('pre-parse failure');
+    },
+  };
+
+  const throwingPostPlugin: FormatPlugin = {
+    name: 'throwing-post-parse-plugin',
+    version: '1.0.0',
+    description: '用于测试的 post-parse 插件',
+    priority: 10,
+    phase: 'post-parse',
+    isApplicable: () => true,
+    processParseResult: () => {
+      throw new Error('post-parse failure');
+    },
+  };
+
+  beforeEach(() => {
+    clearRegisteredPlugins();
+    resetPlugins([...defaultPlugins, throwingPrePlugin, throwingPostPlugin]);
+  });
+
+  afterEach(() => {
+    clearRegisteredPlugins();
+    resetPlugins(defaultPlugins);
+  });
+
+  it('预处理插件抛出异常时应该忽略并继续解析', () => {
+    const parser = new NumberParser();
+    const result = parser.parse('1234');
+
+    expect(result.success).toBe(true);
+    expect(result.value).toBe(1234);
+  });
+
+  it('后处理插件抛出异常时应该返回原始结果', () => {
+    const parser = new NumberParser();
+    const result = parser.parse('5678');
+
+    expect(result.success).toBe(true);
+    expect(result.value).toBe(5678);
+  });
+
+  it('解析超大数字时应该提示结果非有限', () => {
+    const hugeNumber = '9'.repeat(400);
+    const parser = new NumberParser();
+    const result = parser.parse(hugeNumber);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Parsed value is not finite');
+  });
+
+  it('紧凑格式结果溢出时应该提示错误', () => {
+    const hugeCompact = `${'9'.repeat(400)}K`;
+    const parser = new NumberParser({ notation: 'compact' });
+    const result = parser.parse(hugeCompact);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Resulting value is not finite');
+  });
+
+  it('科学记数法指数无效时应该提示错误', () => {
+    const parser = new NumberParser({ notation: 'scientific' });
+    const result = parser.parse('1.2E');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid scientific notation format');
+  });
+
+  it('科学记数法结果溢出时应该提示错误', () => {
+    const parser = new NumberParser({ notation: 'scientific' });
+    const result = parser.parse('9.9E309');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Resulting number is not finite');
+  });
+
+  it('内部符号与分隔符辅助方法应该可靠返回', () => {
+    const parser = new NumberParser({ style: 'currency', currency: 'USD' }) as any;
+
+    // 正常路径
+    expect(parser.getCurrencySymbol()).toBe('$');
+    expect(parser.getGroupSeparator('en-US')).toBe(',');
+    expect(parser.getDecimalSeparator('en-US')).toBe('.');
+
+    // 强制触发兜底逻辑
+    parser.formatter = { formatToParts: () => { throw new Error('fail'); } };
+    expect(parser.getCurrencySymbol()).toBe('$');
+
+    const originalNumberFormat = Intl.NumberFormat;
+    try {
+      // 模拟 Intl.NumberFormat 抛出异常
+      (Intl as any).NumberFormat = class {
+        constructor() {
+          throw new Error('Intl failure');
+        }
+      };
+      expect(parser.getGroupSeparator('en-US')).toBe(',');
+      expect(parser.getDecimalSeparator('en-US')).toBe('.');
+    } finally {
+      (Intl as any).NumberFormat = originalNumberFormat;
+    }
   });
 });
 
@@ -197,6 +363,12 @@ describe('边界情况和错误处理', () => {
     expect(parser.parse('∞').value).toBe(Infinity);
     expect(parser.parse('N/A').success).toBe(true);
     expect(parser.parse('N/A').value).toBeNaN();
+    const zeroResult = parser.parse('0');
+    expect(zeroResult.isZero).toBe(true);
+    expect(zeroResult.mathSign).toBe(0);
+    const negativeZero = parser.parse('-0');
+    expect(negativeZero.isNegativeZero).toBe(true);
+    expect(Object.is(negativeZero.value, -0)).toBe(true);
   });
 
   it('应该处理极大和极小数字', () => {
