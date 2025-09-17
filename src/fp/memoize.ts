@@ -51,34 +51,36 @@ function createSimpleCache<T>(maxSize = 200): SimpleCache<T> {
 
 const formatterCache = createSimpleCache<NumberFormatter>(200);
 const parserCache = createSimpleCache<NumberParser>(200);
-const formatterKeyCache = new WeakMap<object, string>();
 const DEFAULT_FORMATTER_CACHE_KEY = '__default__';
 
 export function getMemoizedFormatter(options: UseFormatOptions = {}): NumberFormatter {
   const isEmptyOptions = !options || Object.keys(options).length === 0;
 
-  let key: string;
-
-  if (isEmptyOptions) {
-    key = DEFAULT_FORMATTER_CACHE_KEY;
-  } else {
-    const cachedKey = formatterKeyCache.get(options as object);
-    if (cachedKey) {
-      key = cachedKey;
-    } else {
-      const normalizedOptions = {
-        locale: options.locale ?? 'zh-CN',
-        style: options.style ?? 'decimal',
-        currency: options.currency ?? 'CNY',
-        notation: options.notation ?? 'standard',
-        useGrouping: options.useGrouping !== false,
-        minimumFractionDigits: options.minimumFractionDigits ?? 0,
-        maximumFractionDigits: options.maximumFractionDigits ?? 3,
-      };
-      key = createCacheKey(normalizedOptions);
-      formatterKeyCache.set(options as object, key);
+  const key = (() => {
+    if (isEmptyOptions) {
+      return DEFAULT_FORMATTER_CACHE_KEY;
     }
-  }
+
+    const baseOptions: Record<string, unknown> = {
+      locale: options.locale ?? 'zh-CN',
+      style: options.style ?? 'decimal',
+      useGrouping: options.useGrouping ?? true,
+    };
+
+    const remainingEntries = Object.entries(options as Record<string, unknown>)
+      .filter(([key]) => key !== 'locale' && key !== 'style' && key !== 'useGrouping')
+      .reduce<Record<string, unknown>>((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});
+
+    const normalizedOptions = {
+      ...baseOptions,
+      ...remainingEntries,
+    };
+
+    return createCacheKey(normalizedOptions, { skipUndefined: true });
+  })();
 
   let formatter = formatterCache.get(key);
 

@@ -17,7 +17,7 @@
       "@dfx/number-format": ["./src"],
       "@dfx/number-format/*": ["./src/*"]
     },
-    "types": ["vitest/globals", "@testing-library/jest-dom"]
+    "types": ["vitest/globals", "@testing-library/jest-dom", "react", "react-dom", "node"]
   },
   "include": [
     "src/**/*.ts",

@@ -35,7 +35,8 @@ function createIntlFormatterCacheKey(
   locale: string,
   options: Intl.NumberFormatOptions,
 ): string {
-  return createCacheKey(options, { prefix: locale });
+  const normalizedOptions = { ...options } as Record<string, unknown>;
+  return createCacheKey(normalizedOptions, { prefix: locale });
 }
 
 /**

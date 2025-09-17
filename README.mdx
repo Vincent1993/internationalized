@@ -3,7 +3,19 @@
 > 基于 [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
 > 的强大数字格式化组件库，支持多种格式化样式、智能规则匹配和异常值自动处理。
 
-## 🧭 项目导航
+## 目录
+
+- 🗺️ 模块地图
+- 🗂️ 目录结构
+- 🚀 快速上手
+- 📋 功能矩阵（核心格式化、解析、高级特性、类型）
+- 🎯 使用场景对比
+- 💻 快速示例
+- 🛠️ 开发指南
+- ✅ 测试与质量
+- ♻️ 缓存策略
+
+## 🗺️ 模块地图
 
 | 模块 | 目录 | 说明 |
 |------|------|------|
@@ -15,7 +27,7 @@
 | Legacy | `src/legacy.ts` | 向后兼容的旧版导出 |
 | Tests | `tests` | 覆盖核心逻辑、插件、组件、E2E 场景及类型声明的完整测试套件 |
 
-### 目录结构
+## 🗂️ 目录结构
 
 ```text
 internationalized/
@@ -31,7 +43,7 @@ internationalized/
 └── package.json        # 包信息与脚本
 ```
 
-## 🚀 快速开始
+## 🚀 快速上手
 
 ### 安装
 
@@ -69,7 +81,7 @@ import { NumberFormat } from '@dfx/number-format';
 // 输出：123.46
 ```
 
-## 📋 功能概览
+## 📋 功能矩阵
 
 ### 核心功能
 
@@ -432,6 +444,39 @@ const customPlugin: FormatPlugin = {
 // 注册插件
 registerPlugin(customPlugin);
 ```
+
+## 🛠️ 开发指南
+
+项目使用 [pnpm](https://pnpm.io) 进行包管理，推荐按照以下步骤开始本地开发：
+
+1. 安装依赖：`pnpm install`
+2. 运行构建：`pnpm build`
+3. 在 `tests/` 目录中添加或调整对应的单元测试/集成测试
+4. 提交前执行质量检查（见下文）
+
+所有核心模块均有配套测试与类型定义，建议在修改 formatter、parser 或插件时同步更新文档与测试用例。
+
+## ✅ 测试与质量
+
+| 命令 | 说明 |
+|------|------|
+| `pnpm test -- --run` | 以无 watch 模式运行完整测试套件 |
+| `pnpm test:coverage` | 生成覆盖率报告，定位薄弱测试点 |
+| `pnpm typecheck` | 使用 TypeScript 进行静态类型检查，确保公共 API 类型安全 |
+
+> 当前仓库仍存在少量历史遗留的类型告警，`pnpm typecheck` 会提示这些问题并以非零状态结束，便于后续逐步修复。
+
+GitHub Actions (`.github/workflows/ci.yml`) 会在 push 与 Pull Request 触发同样的安装、类型检查与测试流程，保证远端仓库与本地环境行为一致。
+
+## ♻️ 缓存策略
+
+函数式 API 使用轻量级缓存避免重复创建 `Intl.NumberFormat`/`NumberParser` 实例。缓存键由 `src/utils/cache-key.ts` 提供的 `createCacheKey` 统一生成，会将：
+
+- `locale`、`style`、`useGrouping` 等核心参数正规化；
+- 自定义扩展选项（如 `extend_fixDecimals`、`extend_negativeZero`）一并纳入哈希计算；
+- 忽略显式为 `undefined` 的字段，保证选项缺省与显式传入默认值共享同一缓存键。
+
+通过这一策略，`src/fp/memoize.ts` 可以稳定地区分不同的格式化需求，同时避免因对象引用复用或扩展字段变动导致的缓存击穿/命中错误。
 
 ## 📚 API 参考
 
