@@ -1,0 +1,45 @@
+# 集成与自动化
+
+借助 corepack、pnpm 与 RSLint，可以让项目获得一致的依赖环境与自动化质量保障。
+
+## 使用 corepack 锁定包管理器
+
+`package.json` 中的 `packageManager` 字段指向 `pnpm@10.16.1`。在执行任何命令前确保运行：
+
+```bash
+corepack enable
+```
+
+随后 `pnpm install` 将自动使用正确的版本，并保持锁文件一致。
+
+## 代码质量检查
+
+项目新增了 [RSLint](https://rslint.org/) 支持：
+
+```bash
+pnpm run lint
+pnpm run lint:fix
+```
+
+RSLint 在 Rust 层面提供高性能、可自动修复的规则，可以与现有测试、类型检查一起构成完整质量链路。
+
+## 文档开发与部署
+
+通过 [Rspress](https://rspress.dev/) 快速构建文档站点：
+
+```bash
+pnpm run docs:dev   # 启动本地文档站点
+pnpm run docs:build # 产出静态站点
+```
+
+构建产物可直接部署至静态托管平台（如 Vercel、Netlify 或 GitHub Pages）。
+
+## 持续集成建议
+
+1. `pnpm install --frozen-lockfile`
+2. `pnpm run lint`
+3. `pnpm run typecheck`
+4. `pnpm run test:coverage`
+5. `pnpm run docs:build`
+
+上述步骤覆盖了代码风格、类型、测试以及文档的全流程。
