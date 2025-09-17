@@ -59,6 +59,7 @@
     "package.json",
     "README.mdx"
   ],
+  "packageManager": "pnpm@10.13.1",
   "dependencies": {
     "big.js": "^7.0.1"
   },
@@ -68,6 +69,10 @@
   },
   "devDependencies": {
     "@rslib/core": "^0.13.3",
+    "@rslint/core": "^0.1.13",
+    "@rspress/plugin-last-updated": "2.0.0-beta.20",
+    "@rspress/plugin-twoslash": "2.0.0-beta.32",
+    "@rspress/plugin-typedoc": "2.0.0-beta.32",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
@@ -81,6 +86,7 @@
     "postcss": "^8.5.6",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "rspress": "2.0.0-beta.21",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
@@ -89,8 +95,12 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:coverage:ci": "vitest run --coverage --coverage.reporter=text-summary --testNamePattern='^(?!.*缓存应该提高重复调用的性能).*$'",
+    "lint": "node ./scripts/run-rslint.mjs",
+    "lint:fix": "node ./scripts/run-rslint.mjs --fix",
     "typecheck": "tsc --noEmit",
     "build": "rslib build",
+    "docs:dev": "rspress dev",
+    "docs:build": "rspress build",
     "prepublishOnly": "pnpm run build"
   },
   "materials": {

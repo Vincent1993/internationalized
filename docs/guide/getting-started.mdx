@@ -1,0 +1,49 @@
+# 快速上手
+
+本章节将带你完成环境准备、安装依赖以及运行第一个数字格式化示例。
+
+## 环境要求
+
+- Node.js `>=18.18`
+- 已启用的 [`corepack`](https://nodejs.org/api/corepack.html)（Node 18+ 默认附带）
+- `pnpm@10`（项目通过 `packageManager` 字段锁定最新版本）
+
+### 激活最新 pnpm
+
+```bash
+corepack enable
+corepack prepare pnpm@10.13.1 --activate
+```
+
+执行以上命令后，工作区会使用相同版本的 pnpm，避免不同开发环境造成的锁文件冲突。
+
+## 安装
+
+```bash
+pnpm install
+```
+
+如果你想将 `internationalized` 集成到已有项目，只需在目标项目运行：
+
+```bash
+pnpm add internationalized
+```
+
+## 基本示例
+
+```tsx
+import { NumberFormat } from 'internationalized';
+
+export function SalesHighlight() {
+  return (
+    <NumberFormat value={123456.789} style="currency" currency="USD" />
+  );
+}
+```
+
+组件会自动应用 `Intl.NumberFormat`，在 React 中即可获得国际化格式化体验。
+
+## 下一步
+
+- 阅读[格式化能力](./formatting.mdx)了解更多选项和插件。
+- 查看[解析输出说明](/reference/parser)掌握解析结果中的符号标记。

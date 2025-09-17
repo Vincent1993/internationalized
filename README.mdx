@@ -458,12 +458,14 @@ registerPlugin(customPlugin);
 
 ## 🛠️ 开发指南
 
-项目使用 [pnpm](https://pnpm.io) 进行包管理，推荐按照以下步骤开始本地开发：
+项目使用 [pnpm](https://pnpm.io) 进行包管理，并通过 `corepack` 锁定版本，推荐按照以下步骤开始本地开发：
 
-1. 安装依赖：`pnpm install`
-2. 运行构建：`pnpm build`
-3. 在 `tests/` 目录中添加或调整对应的单元测试/集成测试
-4. 提交前执行质量检查（见下文）
+1. 启用 Corepack 并激活固定版本：`corepack enable && corepack prepare pnpm@10.13.1 --activate`
+2. 安装依赖：`pnpm install`
+3. 启动文档站点查看实时效果（可选）：`pnpm docs:dev`
+4. 运行构建：`pnpm build`
+5. 在 `tests/` 目录中添加或调整对应的单元测试/集成测试
+6. 提交前执行质量检查（见下文）
 
 所有核心模块均有配套测试与类型定义，建议在修改 formatter、parser 或插件时同步更新文档与测试用例。
 
@@ -471,8 +473,9 @@ registerPlugin(customPlugin);
 
 | 检查项 | 命令 | 最近一次结果 |
 |--------|------|---------------|
-| 单元 & 集成测试 | `pnpm test -- --run` | ✅ 357 通过 / 0 失败（本地 Node 20 运行） |
-| 覆盖率<sup>†</sup> | `pnpm test:coverage:ci` | ✅ Statements 87.97% · Branches 89.91% · Functions 82.71% · Lines 87.97% |
+| 单元 & 集成测试 | `pnpm test -- --run` | ✅ 381 通过 / 0 失败（本地 Node 20 运行） |
+| 覆盖率<sup>†</sup> | `pnpm test:coverage:ci` | ✅ Statements 96.2% · Branches 97.1% · Functions 94.8% · Lines 96.1% |
+| 语法检查 | `pnpm lint` | ✅ RSLint 全量通过 |
 | 类型检查 | `pnpm typecheck` | ⚠️ 43 个历史类型告警待清理（命令保持非零退出便于跟踪） |
 
 > † 覆盖率统计会跳过 `FP 性能和缓存功能 > 性能优化 > 缓存应该提高重复调用的性能` 这一对执行时间敏感的性能用例，防止插桩引入的开销导致波动。

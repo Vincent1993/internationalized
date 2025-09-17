@@ -1,0 +1,56 @@
+# 格式化能力
+
+`internationalized` 基于 `Intl.NumberFormat` 并扩展了插件机制，适用于多种业务场景。
+
+## 组件使用
+
+```tsx
+import { NumberFormat } from 'internationalized';
+
+<NumberFormat value={0.1234} style="percent" maximumFractionDigits={2} />;
+```
+
+- `style` 支持 `decimal`、`currency`、`percent` 以及自定义插件样式（例如 `per-mille`）。
+- 自动根据本地化规则输出千分位、货币符号和单位。
+
+## Hook
+
+```tsx
+import { useFormat } from 'internationalized/hooks';
+
+const { format } = useFormat({ style: 'currency', currency: 'CNY' });
+format(123456.789); // => "￥123,456.79"
+```
+
+Hook 在 React 中共享缓存配置，减少重复创建 `Intl.NumberFormat` 的开销。
+
+## 函数式 API
+
+```ts
+import { formatAsDecimal, formatAsCurrency } from 'internationalized/fp';
+
+formatAsDecimal(1234.567, { maximumFractionDigits: 1 });
+formatAsCurrency(88.6, 'EUR');
+```
+
+函数式入口便于在非 React 环境或服务端场景使用。
+
+## 插件扩展
+
+通过插件可以轻松扩展新的格式化模式：
+
+```ts
+import { registerNumberFormatPlugin } from 'internationalized/core';
+
+registerNumberFormatPlugin({
+  name: 'compact-metric',
+  resolve({ value }) {
+    if (Math.abs(value) >= 10_000) {
+      return { style: 'compact', notation: 'compact' };
+    }
+    return null;
+  }
+});
+```
+
+注册后即可在组件、Hook 与函数式 API 中共享。
