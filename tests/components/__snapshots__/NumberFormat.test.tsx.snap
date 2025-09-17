@@ -1,0 +1,77 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化decimal: 0.1 > numberformat-decimal 1`] = `"0.1"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化many-decimals: 123.456789 > numberformat-many-decimals 1`] = `"123.456789"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化million: 1000000 > numberformat-million 1`] = `"1,000,000"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化negative-one: -1 > numberformat-negative-one 1`] = `"-1"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化one: 1 > numberformat-one 1`] = `"1"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化small-decimal: 0.0001 > numberformat-small-decimal 1`] = `"0.0001"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化thousand: 1000 > numberformat-thousand 1`] = `"1,000"`;
+
+exports[`components/NumberFormat > 不同数值类型测试 > 应该正确格式化zero: 0 > numberformat-zero 1`] = `"0"`;
+
+exports[`components/NumberFormat > 不同样式测试 > 应该正确渲染currency样式 > style-currency 1`] = `"US$1,234.56"`;
+
+exports[`components/NumberFormat > 不同样式测试 > 应该正确渲染decimal样式 > style-decimal 1`] = `"1,234.56"`;
+
+exports[`components/NumberFormat > 不同样式测试 > 应该正确渲染percent样式 > style-percent 1`] = `"12%"`;
+
+exports[`components/NumberFormat > 不同样式测试 > 应该正确渲染unit样式 > style-unit 1`] = `"123米"`;
+
+exports[`components/NumberFormat > 与Context集成测试 > 应该使用Context提供的默认配置 1`] = `"1.234,56 €"`;
+
+exports[`components/NumberFormat > 异常情况测试 > 应该处理配置冲突 1`] = `"US$123.45"`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-0 1`] = `
+<span>
+  1,234.567
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-1 1`] = `
+<span>
+  US$1,234.57
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-2 1`] = `
+<span>
+  12%
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-3 1`] = `
+<span>
+  123 kg
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-4 1`] = `
+<span>
+  42
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-5 1`] = `
+<span>
+  1234567.89
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-6 1`] = `
+<span>
+  123.46
+</span>
+`;
+
+exports[`components/NumberFormat > 快照测试 > 应该为所有主要配置组合生成正确快照 > config-7 1`] = `
+<span>
+  123.100
+</span>
+`;

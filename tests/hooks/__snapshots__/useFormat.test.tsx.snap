@@ -1,0 +1,137 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`hooks/useFormat > resolveOptions功能测试 > 应该返回正确的解析选项 1`] = `
+{
+  "currency": "JPY",
+  "currencyDisplay": "symbol",
+  "currencySign": "standard",
+  "includeSign": false,
+  "locale": "ja-JP",
+  "maximumFractionDigits": 0,
+  "minimumFractionDigits": 0,
+  "minimumIntegerDigits": 1,
+  "notation": "standard",
+  "numberingSystem": "latn",
+  "originalStyle": "currency",
+  "roundingIncrement": 1,
+  "roundingMode": "halfExpand",
+  "roundingPriority": "auto",
+  "signDisplay": "auto",
+  "style": "currency",
+  "trailingZeroDisplay": "auto",
+  "useGrouping": "always",
+}
+`;
+
+exports[`hooks/useFormat > 应该使用默认配置格式化数值 1`] = `
+{
+  "formattedValue": "1,234.56",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "integer",
+      "value": "1",
+    },
+    {
+      "type": "group",
+      "value": ",",
+    },
+    {
+      "type": "integer",
+      "value": "234",
+    },
+    {
+      "type": "decimal",
+      "value": ".",
+    },
+    {
+      "type": "fraction",
+      "value": "56",
+    },
+  ],
+  "resolvedOptions": {
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 3,
+    "minimumFractionDigits": 0,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": undefined,
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "decimal",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 1234.56,
+}
+`;
+
+exports[`hooks/useFormat > 应该支持自定义配置 1`] = `
+{
+  "formattedValue": "US$1,234.50",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "currency",
+      "value": "US$",
+    },
+    {
+      "type": "integer",
+      "value": "1",
+    },
+    {
+      "type": "group",
+      "value": ",",
+    },
+    {
+      "type": "integer",
+      "value": "234",
+    },
+    {
+      "type": "decimal",
+      "value": ".",
+    },
+    {
+      "type": "fraction",
+      "value": "50",
+    },
+  ],
+  "resolvedOptions": {
+    "currency": "USD",
+    "currencyDisplay": "symbol",
+    "currencySign": "standard",
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 2,
+    "minimumFractionDigits": 2,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": "currency",
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "currency",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 1234.5,
+}
+`;

@@ -1,0 +1,48 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`集成测试 > Context层级与优先级 > 应该正确处理多层Context的配置优先级 > nested-inner-context 1`] = `"1.234,6 €"`;
+
+exports[`集成测试 > Context层级与优先级 > 应该正确处理多层Context的配置优先级 > nested-override 1`] = `"1.234,568"`;
+
+exports[`集成测试 > 完整功能快照测试 > 应该为完整的应用场景生成快照 > full-featured-app 1`] = `
+<div
+  data-testid="full-app"
+>
+  <h1>
+    Financial Dashboard
+  </h1>
+  <section>
+    <h2>
+      Revenue Metrics
+    </h2>
+    <span>
+      1,234,567.89
+    </span>
+    <span>
+      456,789.12
+    </span>
+  </section>
+  <section>
+    <h2>
+      Performance Metrics
+    </h2>
+    <span>
+      0.123
+    </span>
+    <span>
+      0.057
+    </span>
+  </section>
+  <section>
+    <h2>
+      Custom Formats
+    </h2>
+    <span>
+      NaN
+    </span>
+    <span>
+      123‰
+    </span>
+  </section>
+</div>
+`;

@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`components/AutoMetricNumber > 应该支持货币格式化 1`] = `"¥199.99"`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同指标类型生成正确的快照 > auto-metric-average_session_duration 1`] = `
+<span>
+  234.67
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同指标类型生成正确的快照 > auto-metric-click_through_rate 1`] = `
+<span>
+  5.67%
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同指标类型生成正确的快照 > auto-metric-conversion_percentage 1`] = `
+<span>
+  12.34%
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同指标类型生成正确的快照 > auto-metric-product_price 1`] = `
+<span>
+  ¥299.99
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同指标类型生成正确的快照 > auto-metric-unknown_metric 1`] = `
+<span>
+  42.195
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同指标类型生成正确的快照 > auto-metric-user_count 1`] = `
+<span>
+  1,235
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同的规则配置生成快照 > rules-variation-0 1`] = `
+<span>
+  25.5
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同的规则配置生成快照 > rules-variation-1 1`] = `
+<span>
+  25.5
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 快照测试 > 应该为不同的规则配置生成快照 > rules-variation-2 1`] = `
+<span>
+  25.5
+</span>
+`;
+
+exports[`components/AutoMetricNumber > 规则匹配测试 > 应该匹配复杂的正则表达式模式 1`] = `"23.5°C"`;

@@ -1,0 +1,102 @@
+{
+  "name": "internationalized",
+  "version": "0.0.1",
+  "description": "数值格式化组件",
+  "keywords": [
+    "React",
+    "component"
+  ],
+  "author": "Vincent1993",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "publishConfig": {
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.js",
+    "exports": {
+      "./": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs",
+        "require": "./dist/index.js"
+      },
+      "./plugins": {
+        "types": "./dist/plugins/index.d.ts",
+        "import": "./dist/plugins.mjs",
+        "require": "./dist/plugins.js"
+      },
+      "./hooks": {
+        "types": "./dist/hooks/index.d.ts",
+        "import": "./dist/hooks.mjs",
+        "require": "./dist/hooks.js"
+      },
+      "./core": {
+        "types": "./dist/core/index.d.ts",
+        "import": "./dist/core.mjs",
+        "require": "./dist/core.js"
+      },
+      "./components": {
+        "types": "./dist/components/index.d.ts",
+        "import": "./dist/components.mjs",
+        "require": "./dist/components.js"
+      },
+      "./fp": {
+        "types": "./dist/fp/index.d.ts",
+        "import": "./dist/fp.mjs",
+        "require": "./dist/fp.js"
+      }
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./fp": "./src/fp/index.ts",
+    "./core": "./src/core/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./plugins": "./src/plugins/index.ts"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.mdx"
+  ],
+  "dependencies": {
+    "big.js": "^7.0.1"
+  },
+  "peerDependencies": {
+    "react": "18 | 19",
+    "react-dom": "18 | 19"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.12.4",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/big.js": "^6.2.2",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0",
+    "@vitest/coverage-v8": "^2.0.5",
+    "big.js": "^7.0.1",
+    "jsdom": "^23.0.0",
+    "vitest": "^3.2.4"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "build": "rslib build",
+    "prepublishOnly": "pnpm run build"
+  },
+  "materials": {
+    "framework": "react",
+    "category": "component",
+    "platform": "pc",
+    "tags": [
+      "fe-bot"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vincent1993/internationalized"
+  },
+  "bugs": "https://github.com/Vincent1993/internationalized/issues"
+}

@@ -1,0 +1,540 @@
+# 数字格式化组件
+
+> 基于 [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat) 的强大数字格式化组件库，支持多种格式化样式、智能规则匹配和异常值自动处理。
+
+## 🚀 快速开始
+
+### 安装
+
+```jsonc
+{
+  "dependencies": {
+    "@dfx/number-format": "workspace:*"
+  }
+}
+```
+
+### 基础使用
+
+```tsx pure
+import { NumberFormat } from '@dfx/number-format';
+
+// 基本数字格式化
+<NumberFormat value={1234.56} />
+// 输出：1,234.56
+
+// 货币格式
+<NumberFormat value={1234.56} options={{ style: 'currency', currency: 'CNY' }} />
+// 输出：¥1,234.56
+
+// 百分比格式
+<NumberFormat value={0.1234} options={{ style: 'percent' }} />
+// 输出：12.34%
+
+// 千分比格式
+<NumberFormat value={0.1234} options={{ style: 'per-mille' }} />
+// 输出：123.4‰
+
+// 固定小数位数
+<NumberFormat value={123.456789} options={{ style: 'decimal', extend_fixDecimals: 2 }} />
+// 输出：123.46
+```
+
+## 📋 功能概览
+
+### 核心功能
+
+| 功能分类 | 组件/Hook | FP 函数 | 描述 |
+|---------|----------|---------|------|
+| **基础格式化** | `<NumberFormat>` | `formatAsDecimal` | 标准数字格式化，支持千分位、小数位控制 |
+| **货币格式** | `<NumberFormat style="currency">` | `formatAsCurrency` | 多币种格式化，自动添加货币符号 |
+| **百分比格式** | `<NumberFormat style="percent">` | `formatAsPercent` | 百分比显示，自动转换数值范围 |
+| **千分比格式** | `<NumberFormat style="per-mille">` | `formatAsPerMille` | 千分比显示，使用 ‰ 符号 |
+| **固定小数位数** | `extend_fixDecimals` 选项 | 扩展配置 | 强制固定小数位数，覆盖用户设置 |
+| **紧凑格式** | `<NumberFormat notation="compact">` | `formatAsCompact` | 大数值紧凑显示（如 1.2M） |
+| **科学记数法** | `<NumberFormat notation="scientific">` | `formatAsScientific` | 科学记数法格式（如 1.23E3） |
+| **整数格式** | - | `formatAsInteger` | 强制整数显示，自动四舍五入 |
+
+### 解析功能
+
+| 功能分类 | Hook | FP 函数 | 描述 |
+|---------|------|---------|------|
+| **基础解析** | `useParse` | `parseDecimal` | 将格式化字符串解析回数字 |
+| **货币解析** | `useParse` | `parseCurrency` | 解析货币格式字符串 |
+| **百分比解析** | `useParse` | `parsePercent` | 解析百分比格式字符串 |
+| **千分比解析** | `useParse` | `parsePerMille` | 解析千分比格式字符串 |
+| **智能解析** | `useAutoParse` | `parseAuto` | 自动检测格式并解析 |
+| **规则匹配解析** | `useAutoParse` | - | 基于规则自动选择解析方式 |
+
+### 高级功能
+
+| 功能分类 | 组件/Hook | 配置方式 | 描述 |
+|---------|----------|----------|------|
+| **全局配置** | `<NumberFormatProvider>` | Provider | 应用级默认配置管理 |
+| **智能规则** | `<AutoMetricNumber>` | `rules` 属性 | 基于名称/正则自动匹配格式 |
+| **异常值处理** | 内置插件 | `registerPlugin` | 处理 null、NaN、Infinity 等 |
+| **固定小数位数** | `extend_fixDecimals` | 扩展选项 | 强制设置小数位数 |
+| **性能缓存** | 自动 | `clearCache` | 格式化器和解析器自动缓存 |
+| **FP 全局配置** | - | `config()` | 函数式编程风格的全局配置 |
+| **多态组件** | `as` 属性 | HTML 元素 | 渲染为不同 HTML 标签 |
+| **函数式渲染** | `children` 函数 | Render Props | 自定义渲染逻辑 |
+
+### 类型安全
+
+| 类型 | 描述 | 示例 |
+|------|------|------|
+| `UseNumberFormatResult` | 格式化结果 | `{ formattedValue, parts, sign, isNaN }` |
+| `ParseResult` | 解析结果 | `{ value, success, error, input }` |
+| `MetricFormatRule` | 规则定义 | `{ name: string, options: ... }` |
+| `ExtendedStyle` | 扩展样式 | `'decimal' \| 'currency' \| 'per-mille'` |
+
+## 🎯 使用场景对比
+
+| 场景 | 推荐方案 | 原因 |
+|------|----------|------|
+| 简单数字展示 | `<NumberFormat>` | 简单直接，支持函数式渲染 |
+| 非 React 环境 | `/fp` 函数式 API | 纯函数，无 React 依赖 |
+| 单次格式化 | `/fp` 函数式 API | 简洁直接，类似 date-fns |
+| 单次解析 | `/fp` 解析函数 | 快速解析，支持自动检测 |
+| 条件格式化 | `useFormat` Hook | 灵活的逻辑控制 |
+| 表单输入解析 | `useParse` Hook | 集成 React 状态管理 |
+| 指标自动匹配 | `<AutoMetricNumber>` | 基于规则自动选择格式 |
+| 指标自动解析 | `useAutoParse` Hook | 基于规则自动解析输入 |
+| 批量相同格式 | `useFormat` Hook | 缓存格式化器，性能最优 |
+| 批量解析 | `/fp` 解析函数 | 缓存解析器，批量处理 |
+| 复杂业务逻辑 | `useAutoFormat` Hook | 支持规则配置和逻辑控制 |
+| 全局统一配置 | `NumberFormatProvider` | 统一管理应用的格式化配置 |
+| FP 风格项目 | `/fp` + `config()` | 函数式编程，全局默认配置 |
+| 数据导入导出 | `/fp` 解析 + 格式化 | 可逆转换，数据一致性保证 |
+
+## 💻 快速示例
+
+### Hook 使用
+
+```tsx pure
+import { useFormat, useParse } from '@dfx/number-format';
+
+function PriceDisplay({ price }) {
+  const { format } = useFormat({ style: 'currency', currency: 'USD' });
+  const result = format(price);
+  return <span>{result.formattedValue}</span>;
+}
+
+function PriceInput({ onChange }) {
+  const { parse } = useParse({ style: 'currency', currency: 'USD' });
+
+  const handleChange = (input) => {
+    const result = parse(input);
+    if (result.success) {
+      onChange(result.value);
+    }
+  };
+
+  return <input onChange={(e) => handleChange(e.target.value)} />;
+}
+```
+
+### FP 函数式编程
+
+```tsx pure
+import {
+  formatAsCurrency,
+  formatAsPercent,
+  parseCurrency,
+  parsePercent,
+  config,
+} from '@dfx/number-format/fp';
+
+// 格式化
+const price = formatAsCurrency(1234.56, 'USD'); // "$1,234.56"
+const percentage = formatAsPercent(0.8765, { maximumFractionDigits: 2 }); // "87.65%"
+const fixed = formatAsDecimal(123.456789, { extend_fixDecimals: 3 }); // "123.457"
+
+// 解析
+const currencyResult = parseCurrency("$1,234.56", "USD"); // { value: 1234.56, success: true }
+const percentResult = parsePercent("12.34%"); // { value: 0.1234, success: true }
+
+// 全局配置
+config({
+  percent: { maximumFractionDigits: 1 },
+  currency: { minimumFractionDigits: 0 },
+});
+```
+
+### 智能规则匹配
+
+```tsx pure
+import { AutoMetricNumber, useAutoFormat } from '@dfx/number-format';
+
+const rules = [
+  { name: 'conversion_rate', options: { style: 'percent', maximumFractionDigits: 2 } },
+  { pattern: /.*_rate$/i, options: { style: 'percent' } },
+  { pattern: /.*amount$/i, options: { style: 'currency', currency: 'USD' } },
+];
+
+// 组件方式
+<AutoMetricNumber name="click_rate" value={0.456} rules={rules} />
+// 输出：45.6%
+
+// Hook 方式
+function MetricCard({ metricName, value }) {
+  const { format } = useAutoFormat({ name: metricName, rules });
+  const result = format(value);
+  return <span>{result.formattedValue}</span>;
+}
+```
+
+## 🌍 全局配置
+
+### Provider 配置
+
+```tsx pure
+import { NumberFormatProvider } from '@dfx/number-format';
+
+function App() {
+  return (
+    <NumberFormatProvider
+      options={{
+        locale: 'zh-CN',
+        useGrouping: true,
+        rules: [
+          { pattern: /.*_rate$/i, options: { style: 'percent' } },
+          { pattern: /.*amount$/i, options: { style: 'currency', currency: 'CNY' } },
+        ]
+      }}
+    >
+      <NumberFormat value={1234.56} />
+      {/* 输出：1,234.56 */}
+    </NumberFormatProvider>
+  );
+}
+```
+
+### FP 全局配置
+
+```tsx pure
+import { config, resetDefaultConfigs } from '@dfx/number-format/fp';
+
+// 设置全局默认配置
+config({
+  percent: { maximumFractionDigits: 1 },
+  perMille: { maximumFractionDigits: 3 },
+  currency: { minimumFractionDigits: 0 },
+});
+
+// 重置配置
+resetDefaultConfigs();
+```
+
+## ⚡ 性能优化
+
+### 缓存机制
+
+```tsx pure
+import { clearCache, clearParserCache, clearAllFPCaches } from '@dfx/number-format/fp';
+
+// 批量操作 - 自动利用缓存
+const prices = [100, 200, 300];
+const formatted = prices.map(price => formatAsCurrency(price, 'USD'));
+const parsed = formatted.map(str => parseCurrency(str, 'USD'));
+
+// 手动清除缓存（通常不需要）
+clearCache();          // 清除格式化器缓存
+clearParserCache();    // 清除解析器缓存
+clearAllFPCaches();    // 清除所有 FP 缓存
+```
+
+### 批量格式化
+
+```tsx pure
+function MetricTable({ metrics }) {
+  const { format: formatCurrency } = useFormat({
+    style: 'currency',
+    currency: 'USD'
+  });
+  const { format: formatPercent } = useFormat({
+    style: 'percent'
+  });
+
+  return (
+    <table>
+      {metrics.map((metric) => (
+        <tr key={metric.id}>
+          <td>
+            {metric.type === 'currency'
+              ? formatCurrency(metric.value).formattedValue
+              : formatPercent(metric.value).formattedValue
+            }
+          </td>
+        </tr>
+      ))}
+    </table>
+  );
+}
+```
+
+## 🔌 插件系统
+
+### 内置插件
+
+| 插件名称 | 功能描述 | 使用场景 |
+|---------|----------|----------|
+| **fallback** | 异常值处理 | 处理 null、NaN、Infinity 等异常值 |
+| **per-mille** | 千分比格式 | 支持 ‰ 符号的千分比显示 |
+| **fix-decimals** | 固定小数位数 | 强制设置小数位数，覆盖用户配置 |
+| **validator** | 配置验证 | 验证格式化选项的有效性 |
+
+### 固定小数位数插件
+
+```tsx pure
+import { NumberFormat } from '@dfx/number-format';
+
+// 基础用法 - 固定2位小数
+<NumberFormat
+  value={123.456789}
+  options={{
+    style: 'decimal',
+    extend_fixDecimals: 2  // 强制固定为2位小数
+  }}
+/>
+// 输出：123.46
+
+// 与货币结合
+<NumberFormat
+  value={123.456789}
+  options={{
+    style: 'currency',
+    currency: 'CNY',
+    extend_fixDecimals: 3  // 强制固定为3位小数
+  }}
+/>
+// 输出：¥123.457
+
+// 覆盖用户配置
+<NumberFormat
+  value={123.456789}
+  options={{
+    style: 'decimal',
+    maximumFractionDigits: 1,  // 这个设置会被忽略
+    extend_fixDecimals: 4      // 实际生效的配置
+  }}
+/>
+// 输出：123.4568
+```
+
+### 异常值处理插件
+
+```tsx pure
+import { createFallbackPlugin, unregisterPlugin, registerPlugin } from '@dfx/number-format';
+
+// 默认异常值处理
+<NumberFormat value={null} />              // 输出：-
+<NumberFormat value={NaN} />               // 输出：N/A
+<NumberFormat value={Infinity} />          // 输出：∞
+
+// 自定义异常值处理
+const customFallback = createFallbackPlugin({
+  defaultStrategy: {
+    onNull: '暂无数据',
+    onNaN: '无效数值',
+    onInfinity: '无穷大',
+  },
+  styleStrategies: [
+    {
+      style: 'currency',
+      strategy: { onNull: '---', preserveFormatting: true },
+    },
+  ],
+});
+
+unregisterPlugin('fallback');
+registerPlugin(customFallback);
+```
+
+### 千分比插件
+
+```tsx pure
+import { NumberFormat } from '@dfx/number-format';
+
+// 千分比格式化
+<NumberFormat
+  value={0.1234}
+  options={{
+    style: 'per-mille',
+    extend_fixDecimals: 2  // 可选：固定小数位数
+  }}
+/>
+// 输出：123.40‰
+
+// 自动启用，无需手动注册
+```
+
+### 自定义插件开发
+
+```tsx pure
+import { FormatPlugin } from '@dfx/number-format';
+
+const customPlugin: FormatPlugin = {
+  name: 'custom-plugin',
+  version: '1.0.0',
+  description: '自定义格式化插件',
+  priority: 50,
+  phase: 'post-process', // 或 'pre-process'
+
+  isApplicable: (context) => {
+    // 判断是否适用此插件
+    return context.style === 'decimal';
+  },
+
+  processOptions: (options) => {
+    // 修改格式化选项
+    return { ...options, useGrouping: false };
+  },
+
+  processResult: (formattedValue, parts) => {
+    // 修改格式化结果（仅后处理阶段）
+    return {
+      formattedValue: `[${formattedValue}]`,
+      parts: [{ type: 'literal', value: '[' }, ...parts, { type: 'literal', value: ']' }]
+    };
+  }
+};
+
+// 注册插件
+registerPlugin(customPlugin);
+```
+
+## 📚 API 参考
+
+### 组件 API
+
+```tsx pure
+interface NumberFormatProps<T extends ElementType = 'span'> {
+  value: number;
+  options?: UseFormatOptions;
+  as?: T;
+  children?: (result: UseNumberFormatResult) => React.ReactNode;
+}
+
+// 扩展选项接口
+interface CoreExtensionOptions {
+  /** 是否启用扩展版的符号显示逻辑（优先于 legacy includeSign） */
+  extend_includeSign?: boolean;
+  /** 零值的符号显示策略 */
+  extend_signZeroMode?: 'auto' | 'always';
+  /** 负零值处理策略 */
+  extend_negativeZero?: 'as-zero' | 'keep';
+  /** 固定小数位数（自动设置 minimumFractionDigits 和 maximumFractionDigits 为相同值） */
+  extend_fixDecimals?: number;
+}
+
+interface AutoMetricNumberProps<T extends ElementType = 'span'> {
+  name: string;
+  value: number;
+  rules?: MetricFormatRule[];
+  as?: T;
+}
+```
+
+### Hook API
+
+```tsx pure
+function useFormat(options?: UseFormatOptions): NumberFormatter;
+function useParse(options?: UseParseOptions): UseParseResult;
+function useAutoFormat(options: UseAutoFormatOptions): NumberFormatter;
+function useAutoParse(options: UseAutoParseOptions): UseParseResult;
+```
+
+### FP API
+
+```tsx pure
+// 格式化函数
+function formatAsDecimal(value: unknown, options?: UseFormatOptions): string;
+function formatAsCurrency(value: unknown, currency: string, options?: UseFormatOptions): string;
+function formatAsPercent(value: unknown, options?: UseFormatOptions): string;
+
+// 解析函数
+function parseDecimal(input: string, options?: ParseOptions): ParseResult;
+function parseCurrency(input: string, currency: string, options?: ParseOptions): ParseResult;
+function parsePercent(input: string, options?: ParseOptions): ParseResult;
+function parseAuto(input: string, options?: ParseOptions): ParseResult;
+
+// 配置管理
+function config(): FormatterDefaults;
+function config(configs: Partial<FormatterDefaults>): FormatterDefaults;
+function resetDefaultConfigs(): void;
+
+// 缓存管理
+function clearCache(): void;
+function clearParserCache(): void;
+function clearAllFPCaches(): void;
+```
+
+### 核心类型
+
+```tsx pure
+interface UseNumberFormatResult {
+  value: number;
+  formattedValue: string;
+  parts: Intl.NumberFormatPart[];
+  sign: { isPositive: boolean; isNegative: boolean; isZero: boolean; numeric: 1 | -1 | 0 };
+  isNaN: boolean;
+}
+
+interface ParseResult {
+  value: number;
+  success: boolean;
+  input: string;
+  error: string | null;
+}
+
+type MetricFormatRule =
+  | { name: string; options: Intl.NumberFormatOptions & { style?: ExtendedStyle } }
+  | { pattern: string | RegExp; options: Intl.NumberFormatOptions & { style?: ExtendedStyle } };
+
+type ExtendedStyle = Intl.NumberFormatOptions['style'] | 'per-mille';
+```
+
+## ❓ FAQ
+
+**Q: 异常值如何处理？**
+A: 系统默认启用 Fallback 插件处理异常值。`null`、`undefined` → `-`，`NaN` → `N/A`，`Infinity` → `∞`。可通过 `unregisterPlugin('fallback')` 禁用。
+
+**Q: 规则匹配优先级是什么？**
+A: 精确 name 匹配 > 正则 pattern 匹配 > 默认配置。局部规则优先级高于全局规则。
+
+**Q: FP 配置优先级是什么？**
+A: 用户传入选项 > 全局默认配置 > 函数内置选项。通过 `config()` 设置的全局配置会影响所有后续调用。
+
+**Q: 如何提升性能？**
+A: 使用 Hook 缓存格式化器，批量相同格式时复用同一个格式化器。FP 函数内置缓存机制，组件使用 React.memo 避免不必要的重渲染。可以通过 `clearCache()` 手动清理缓存。
+
+**Q: 如何固定小数位数？**
+A: 使用 `extend_fixDecimals` 扩展选项。例如 `options={{ extend_fixDecimals: 2 }}` 会强制显示2位小数，覆盖用户的 `minimumFractionDigits` 和 `maximumFractionDigits` 设置。
+
+**Q: 支持哪些数字格式？**
+A: 支持所有 `Intl.NumberFormat` 格式，额外支持千分比（‰）格式。包括小数、整数、货币、百分比、紧凑格式、科学记数法等。
+
+**Q: 如何实现可逆转换？**
+A: 使用对应的解析函数。例如 `formatAsCurrency` 对应 `parseCurrency`，确保 `parse(format(value)) === value`。
+
+## 🔗 相关链接
+
+- [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat) - 底层 API 文档
+- [`formatToParts()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/formatToParts) - 格式化结果部分
+- [`Big.js`](https://github.com/MikeMcl/big.js/) - 精确数值计算库
+
+## ✨ 特性总结
+
+- **🌍 国际化支持**: 基于标准 `Intl.NumberFormat` API
+- **🎯 TypeScript 支持**: 完整的类型定义和智能提示
+- **⚡ 性能优化**: 内置缓存机制，避免重复创建格式化器，组件使用 React.memo
+- **🔧 函数式编程**: `/fp` 入口提供纯函数式格式化函数
+- **⚙️ 全局配置**: 支持为不同格式类型设置默认选项
+- **🔌 插件系统**: 4个内置插件 + 自定义插件扩展支持
+- **🛡️ 异常值处理**: 内置 Fallback 插件，优雅处理异常值
+- **📊 智能规则**: 支持精确匹配和正则模式的自动格式化
+- **🎨 组件化设计**: 多态组件支持，灵活的渲染方式
+- **🔄 可逆解析**: 强大的解析功能，支持格式化字符串转数字
+- **📱 响应式**: 与任何 UI 框架无缝集成
+- **🔧 扩展选项**: 支持 `extend_fixDecimals` 等高级格式化控制

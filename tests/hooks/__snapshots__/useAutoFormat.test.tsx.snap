@@ -1,0 +1,244 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`hooks/useAutoFormat > 快照测试 > 应该为不同指标类型生成正确格式 > auto-format-conversion_rate-0.1234 1`] = `
+{
+  "formattedValue": "12.34%",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "integer",
+      "value": "12",
+    },
+    {
+      "type": "decimal",
+      "value": ".",
+    },
+    {
+      "type": "fraction",
+      "value": "34",
+    },
+    {
+      "type": "percentSign",
+      "value": "%",
+    },
+  ],
+  "resolvedOptions": {
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 2,
+    "minimumFractionDigits": 0,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": "percent",
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "percent",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 0.1234,
+}
+`;
+
+exports[`hooks/useAutoFormat > 快照测试 > 应该为不同指标类型生成正确格式 > auto-format-product_price-299.99 1`] = `
+{
+  "formattedValue": "¥299.99",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "currency",
+      "value": "¥",
+    },
+    {
+      "type": "integer",
+      "value": "299",
+    },
+    {
+      "type": "decimal",
+      "value": ".",
+    },
+    {
+      "type": "fraction",
+      "value": "99",
+    },
+  ],
+  "resolvedOptions": {
+    "currency": "CNY",
+    "currencyDisplay": "symbol",
+    "currencySign": "standard",
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 2,
+    "minimumFractionDigits": 2,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": "currency",
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "currency",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 299.99,
+}
+`;
+
+exports[`hooks/useAutoFormat > 快照测试 > 应该为不同指标类型生成正确格式 > auto-format-unknown_metric-42.195 1`] = `
+{
+  "formattedValue": "42.195",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "integer",
+      "value": "42",
+    },
+    {
+      "type": "decimal",
+      "value": ".",
+    },
+    {
+      "type": "fraction",
+      "value": "195",
+    },
+  ],
+  "resolvedOptions": {
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 3,
+    "minimumFractionDigits": 0,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": "decimal",
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "decimal",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 42.195,
+}
+`;
+
+exports[`hooks/useAutoFormat > 快照测试 > 应该为不同指标类型生成正确格式 > auto-format-user_count-1234.56 1`] = `
+{
+  "formattedValue": "1,235",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "integer",
+      "value": "1",
+    },
+    {
+      "type": "group",
+      "value": ",",
+    },
+    {
+      "type": "integer",
+      "value": "235",
+    },
+  ],
+  "resolvedOptions": {
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 0,
+    "minimumFractionDigits": 0,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": "decimal",
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "decimal",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 1234.56,
+}
+`;
+
+exports[`hooks/useAutoFormat > 规则匹配测试 > 应该匹配currency规则 1`] = `
+{
+  "formattedValue": "¥199.99",
+  "isNaN": false,
+  "parts": [
+    {
+      "type": "currency",
+      "value": "¥",
+    },
+    {
+      "type": "integer",
+      "value": "199",
+    },
+    {
+      "type": "decimal",
+      "value": ".",
+    },
+    {
+      "type": "fraction",
+      "value": "99",
+    },
+  ],
+  "resolvedOptions": {
+    "currency": "CNY",
+    "currencyDisplay": "symbol",
+    "currencySign": "standard",
+    "includeSign": false,
+    "locale": "zh-CN",
+    "maximumFractionDigits": 2,
+    "minimumFractionDigits": 2,
+    "minimumIntegerDigits": 1,
+    "notation": "standard",
+    "numberingSystem": "latn",
+    "originalStyle": "currency",
+    "roundingIncrement": 1,
+    "roundingMode": "halfExpand",
+    "roundingPriority": "auto",
+    "signDisplay": "auto",
+    "style": "currency",
+    "trailingZeroDisplay": "auto",
+    "useGrouping": "always",
+  },
+  "sign": {
+    "isNegative": false,
+    "isPositive": true,
+    "isZero": false,
+    "numeric": 1,
+  },
+  "value": 199.99,
+}
+`;

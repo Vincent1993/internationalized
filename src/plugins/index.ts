@@ -1,0 +1,43 @@
+/**
+ * @file 插件系统公共 API
+ */
+
+// ==================== 插件管理 API ====================
+export {
+  registerPlugin,
+  registerGroup,
+  unregisterPlugin,
+  unregisterGroup,
+  setPluginEnabled,
+  setGroupEnabled,
+  getRegisteredPlugins,
+  getPluginInfo,
+  getPluginRegistry,
+  resetPlugins,
+  clearRegisteredPlugins,
+} from './registry';
+
+// ==================== 内置插件 ====================
+export { perMillePluginGroup } from './per-mille';
+export { fallbackPlugin, createFallbackPlugin } from './fallback';
+export { fixDecimalsPlugin } from './fix-decimals';
+
+// ==================== 类型定义 ====================
+export type {
+  FormatPlugin,
+  PluginGroup,
+  PluginRegistration,
+  PluginExecutionContext,
+  PluginPhase,
+  PluginProcessor,
+  ExtendedStyle,
+  BaseFormatter,
+  InputValueState,
+} from './types';
+
+export type {
+  FallbackStrategy,
+  StyleFallbackConfig,
+  GlobalFallbackConfig,
+  ContextAwareFallbackConfig,
+} from './fallback';

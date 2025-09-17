@@ -1,0 +1,11 @@
+{
+  "extends": "@monorepo/ts-config/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@dfx/number-format": ["./"]
+    },
+    "types": ["vitest/globals"]
+  },
+  "include": ["test/*.test.tsx", "src/**/*.tsx", "src/**/*.ts"]
+}
