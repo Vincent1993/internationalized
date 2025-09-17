@@ -1,4 +1,5 @@
 import { getPluginRegistry } from '../plugins';
+import { createCacheKey } from '../utils/cache-key';
 import type { PluginExecutionContext, BaseFormatter, CoreExtensionOptions } from '../plugins/types';
 import { detectValueState, VALUE_STATE } from './utils';
 import type {
@@ -28,6 +29,14 @@ function createPluginContext(
     valueState: detectValueState(originalValue),
     extend: extend ? Object.freeze({ ...extend }) : undefined,
   };
+}
+
+function createIntlFormatterCacheKey(
+  locale: string,
+  options: Intl.NumberFormatOptions,
+): string {
+  const normalizedOptions = { ...options } as Record<string, unknown>;
+  return createCacheKey(normalizedOptions, { prefix: locale });
 }
 
 /**
@@ -260,20 +269,45 @@ export function createFormatterCore(
   options: UseFormatOptions,
   contextDefaults?: NumberFormatContextValue | null,
 ): NumberFormatter {
-  const format = (value: unknown): UseFormatResult => {
-    const resolvedOptions = resolveFormatOptions(options, contextDefaults);
-    const { originalStyle, locale, ...intlOptions } = resolvedOptions;
+  const intlFormatterCache = new Map<string, Intl.NumberFormat>();
 
-    const extractExtend = (opts: UseFormatOptions, ctx?: NumberFormatContextValue | null) => {
-      const extend: CoreExtensionOptions = {
-        extend_includeSign: opts.extend_includeSign ?? ctx?.extend_includeSign,
-        extend_signZeroMode: opts.extend_signZeroMode ?? ctx?.extend_signZeroMode,
-        extend_negativeZero: opts.extend_negativeZero ?? ctx?.extend_negativeZero,
-        extend_fixDecimals: opts.extend_fixDecimals ?? ctx?.extend_fixDecimals,
-      };
-      return extend;
+  const getCachedIntlFormatter = (
+    locale: string,
+    opts: Intl.NumberFormatOptions,
+  ): Intl.NumberFormat => {
+    const cacheKey = createIntlFormatterCacheKey(locale, opts);
+    const cached = intlFormatterCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const formatter = new Intl.NumberFormat(locale, opts);
+    intlFormatterCache.set(cacheKey, formatter);
+    return formatter;
+  };
+
+  let resolvedOptionsCache: ResolvedFormatOptions | null = null;
+  const getResolvedOptions = (): ResolvedFormatOptions => {
+    if (!resolvedOptionsCache) {
+      resolvedOptionsCache = resolveFormatOptions(options, contextDefaults);
+    }
+    return resolvedOptionsCache;
+  };
+
+  const extractExtend = (opts: UseFormatOptions, ctx?: NumberFormatContextValue | null) => {
+    const extend: CoreExtensionOptions = {
+      extend_includeSign: opts.extend_includeSign ?? ctx?.extend_includeSign,
+      extend_signZeroMode: opts.extend_signZeroMode ?? ctx?.extend_signZeroMode,
+      extend_negativeZero: opts.extend_negativeZero ?? ctx?.extend_negativeZero,
+      extend_fixDecimals: opts.extend_fixDecimals ?? ctx?.extend_fixDecimals,
     };
-    const extendOptions = extractExtend(options, contextDefaults || null);
+    return extend;
+  };
+  const memoizedExtendOptions = extractExtend(options, contextDefaults || null);
+
+  const format = (value: unknown): UseFormatResult => {
+    const resolvedOptions = getResolvedOptions();
+    const { originalStyle, locale, ...intlOptions } = resolvedOptions;
 
     const numericValueRaw = Number(value);
     const numericSign: 1 | -1 | 0 = numericValueRaw > 0 ? 1 : numericValueRaw < 0 ? -1 : 0;
@@ -286,7 +320,7 @@ export function createFormatterCore(
 
     // 统一经由 applyFormatPlugins 处理（含无效值与异常）
     const baseFormatter: BaseFormatter = (val, opts) => {
-      const formatter = new Intl.NumberFormat(locale, opts);
+      const formatter = getCachedIntlFormatter(locale, opts);
       return {
         formattedValue: formatter.format(val),
         parts: formatter.formatToParts(val),
@@ -298,7 +332,7 @@ export function createFormatterCore(
       originalStyle,
       { ...intlOptions },
       baseFormatter,
-      extendOptions,
+      memoizedExtendOptions,
     );
 
     return {
@@ -307,13 +341,13 @@ export function createFormatterCore(
       parts,
       sign,
       isNaN: isInvalidOrErrored,
-      resolvedOptions,
+      resolvedOptions: { ...resolvedOptions },
     };
   };
 
   return {
     format,
-    resolveOptions: () => resolveFormatOptions(options, contextDefaults),
+    resolveOptions: () => ({ ...getResolvedOptions() }),
   };
 }
 
