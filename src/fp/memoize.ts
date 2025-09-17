@@ -2,6 +2,7 @@ import type { UseFormatOptions, NumberFormatter } from '../core/types';
 import type { ParseOptions } from '../core/parser';
 import { NumberParser } from '../core/parser';
 import { createNumberFormat } from '../core/formatter';
+import { createCacheKey } from '../utils/cache-key';
 
 interface CacheItem<T> {
   value: T;
@@ -44,32 +45,41 @@ function createSimpleCache<T>(maxSize = 200): SimpleCache<T> {
   };
 }
 
-function createCacheKey(obj: Record<string, unknown>): string {
-  return Object.entries(obj)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}:${String(value)}`)
-    .join('|');
-}
-
 // =============================================================================
 // 专用缓存实例
 // =============================================================================
 
 const formatterCache = createSimpleCache<NumberFormatter>(200);
 const parserCache = createSimpleCache<NumberParser>(200);
+const formatterKeyCache = new WeakMap<object, string>();
+const DEFAULT_FORMATTER_CACHE_KEY = '__default__';
 
 export function getMemoizedFormatter(options: UseFormatOptions = {}): NumberFormatter {
-  const normalizedOptions = {
-    locale: options.locale ?? 'zh-CN',
-    style: options.style ?? 'decimal',
-    currency: options.currency ?? 'CNY',
-    notation: options.notation ?? 'standard',
-    useGrouping: options.useGrouping !== false,
-    minimumFractionDigits: options.minimumFractionDigits ?? 0,
-    maximumFractionDigits: options.maximumFractionDigits ?? 3,
-  };
+  const isEmptyOptions = !options || Object.keys(options).length === 0;
 
-  const key = createCacheKey(normalizedOptions);
+  let key: string;
+
+  if (isEmptyOptions) {
+    key = DEFAULT_FORMATTER_CACHE_KEY;
+  } else {
+    const cachedKey = formatterKeyCache.get(options as object);
+    if (cachedKey) {
+      key = cachedKey;
+    } else {
+      const normalizedOptions = {
+        locale: options.locale ?? 'zh-CN',
+        style: options.style ?? 'decimal',
+        currency: options.currency ?? 'CNY',
+        notation: options.notation ?? 'standard',
+        useGrouping: options.useGrouping !== false,
+        minimumFractionDigits: options.minimumFractionDigits ?? 0,
+        maximumFractionDigits: options.maximumFractionDigits ?? 3,
+      };
+      key = createCacheKey(normalizedOptions);
+      formatterKeyCache.set(options as object, key);
+    }
+  }
+
   let formatter = formatterCache.get(key);
 
   if (!formatter) {

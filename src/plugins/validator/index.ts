@@ -18,8 +18,8 @@ export const validatorPlugin: FormatPlugin = {
   isApplicable: () => true, // 对所有格式化操作都适用
 
   processOptions: (options: Intl.NumberFormatOptions): Intl.NumberFormatOptions => {
-    // 创建一个副本以进行可能的修改
-    const newOptions = { ...options };
+    // 创建一个可变副本以进行可能的修改
+    let newOptions: Intl.NumberFormatOptions = { ...options };
 
     for (const rule of validationRules) {
       if (!rule.isValid(newOptions)) {
@@ -32,7 +32,10 @@ export const validatorPlugin: FormatPlugin = {
         } else {
           // 在生产环境中，如果存在修复逻辑，则应用修复
           if (rule.fix) {
-            Object.assign(newOptions, rule.fix(newOptions));
+            const fixedOptions = rule.fix(newOptions);
+            if (fixedOptions) {
+              newOptions = { ...fixedOptions };
+            }
           }
         }
       }

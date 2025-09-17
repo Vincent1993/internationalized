@@ -73,10 +73,20 @@ export function updateDefaultConfig<T extends keyof FormatterDefaults>(
   type: T,
   config: Partial<FormatterDefaults[T]>,
 ): void {
-  defaultConfigs[type] = {
+  const mergedConfig: FormatterDefaults[T] = {
     ...defaultConfigs[type],
     ...config,
   };
+
+  if (
+    type === 'perMille' &&
+    typeof (config as UseFormatOptions).maximumFractionDigits === 'number' &&
+    (config as UseFormatOptions).extend_fixDecimals === undefined
+  ) {
+    mergedConfig.extend_fixDecimals = (config as UseFormatOptions).maximumFractionDigits;
+  }
+
+  defaultConfigs[type] = mergedConfig;
 }
 
 /**

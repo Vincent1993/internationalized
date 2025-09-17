@@ -1,4 +1,5 @@
 import { getPluginRegistry } from '../plugins';
+import { createCacheKey } from '../utils/cache-key';
 import type { PluginExecutionContext, BaseFormatter, CoreExtensionOptions } from '../plugins/types';
 import { detectValueState, VALUE_STATE } from './utils';
 import type {
@@ -28,6 +29,13 @@ function createPluginContext(
     valueState: detectValueState(originalValue),
     extend: extend ? Object.freeze({ ...extend }) : undefined,
   };
+}
+
+function createIntlFormatterCacheKey(
+  locale: string,
+  options: Intl.NumberFormatOptions,
+): string {
+  return createCacheKey(options, { prefix: locale });
 }
 
 /**
@@ -260,6 +268,23 @@ export function createFormatterCore(
   options: UseFormatOptions,
   contextDefaults?: NumberFormatContextValue | null,
 ): NumberFormatter {
+  const intlFormatterCache = new Map<string, Intl.NumberFormat>();
+
+  const getCachedIntlFormatter = (
+    locale: string,
+    opts: Intl.NumberFormatOptions,
+  ): Intl.NumberFormat => {
+    const cacheKey = createIntlFormatterCacheKey(locale, opts);
+    const cached = intlFormatterCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const formatter = new Intl.NumberFormat(locale, opts);
+    intlFormatterCache.set(cacheKey, formatter);
+    return formatter;
+  };
+
   const format = (value: unknown): UseFormatResult => {
     const resolvedOptions = resolveFormatOptions(options, contextDefaults);
     const { originalStyle, locale, ...intlOptions } = resolvedOptions;
@@ -286,7 +311,7 @@ export function createFormatterCore(
 
     // 统一经由 applyFormatPlugins 处理（含无效值与异常）
     const baseFormatter: BaseFormatter = (val, opts) => {
-      const formatter = new Intl.NumberFormat(locale, opts);
+      const formatter = getCachedIntlFormatter(locale, opts);
       return {
         formattedValue: formatter.format(val),
         parts: formatter.formatToParts(val),
