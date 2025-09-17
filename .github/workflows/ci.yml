@@ -35,4 +35,6 @@ jobs:
 
       - name: Run tests
         run: pnpm test -- --run
-        continue-on-error: true
+
+      - name: Collect coverage (CI profile)
+        run: pnpm test:coverage:ci

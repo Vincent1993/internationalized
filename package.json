@@ -84,6 +84,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:coverage:ci": "vitest run --coverage --coverage.reporter=text-summary --testNamePattern='^(?!.*缓存应该提高重复调用的性能).*$'",
     "typecheck": "tsc --noEmit",
     "build": "rslib build",
     "prepublishOnly": "pnpm run build"

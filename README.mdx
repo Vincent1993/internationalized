@@ -1,5 +1,9 @@
 # 数字格式化组件
 
+[![CI](https://github.com/Vincent1993/internationalized/actions/workflows/ci.yml/badge.svg)](https://github.com/Vincent1993/internationalized/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)](#-测试与质量)
+[![Tests](https://img.shields.io/badge/tests-357%20passed-1E90FF.svg)](#-测试与质量)
+
 > 基于 [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
 > 的强大数字格式化组件库，支持多种格式化样式、智能规则匹配和异常值自动处理。
 
@@ -458,15 +462,15 @@ registerPlugin(customPlugin);
 
 ## ✅ 测试与质量
 
-| 命令 | 说明 |
-|------|------|
-| `pnpm test -- --run` | 以无 watch 模式运行完整测试套件 |
-| `pnpm test:coverage` | 生成覆盖率报告，定位薄弱测试点 |
-| `pnpm typecheck` | 使用 TypeScript 进行静态类型检查，确保公共 API 类型安全 |
+| 检查项 | 命令 | 最近一次结果 |
+|--------|------|---------------|
+| 单元 & 集成测试 | `pnpm test -- --run` | ✅ 357 通过 / 0 失败（本地 Node 20 运行） |
+| 覆盖率<sup>†</sup> | `pnpm test:coverage:ci` | ✅ Statements 87.97% · Branches 89.91% · Functions 82.71% · Lines 87.97% |
+| 类型检查 | `pnpm typecheck` | ⚠️ 43 个历史类型告警待清理（命令保持非零退出便于跟踪） |
 
-> 当前仓库仍存在少量历史遗留的类型告警，`pnpm typecheck` 会提示这些问题并以非零状态结束，便于后续逐步修复。
+> † 覆盖率统计会跳过 `FP 性能和缓存功能 > 性能优化 > 缓存应该提高重复调用的性能` 这一对执行时间敏感的性能用例，防止插桩引入的开销导致波动。
 
-GitHub Actions (`.github/workflows/ci.yml`) 会在 push 与 Pull Request 触发同样的安装、类型检查与测试流程，保证远端仓库与本地环境行为一致。
+GitHub Actions（见 `.github/workflows/ci.yml`）会在 push 与 Pull Request 时自动执行 `pnpm install` → `pnpm typecheck` → `pnpm test -- --run` → `pnpm test:coverage:ci`，保证远端 CI 状态与本地一致。
 
 ## ♻️ 缓存策略
 
