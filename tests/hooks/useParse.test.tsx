@@ -23,6 +23,8 @@ describe('useParse', () => {
 
     expect(parseResult.success).toBe(true);
     expect(parseResult.value).toBe(1234.56);
+    expect(parseResult.mathSign).toBe(1);
+    expect(parseResult.isInteger).toBe(false);
   });
 
   it('应该使用指定的解析选项', () => {
