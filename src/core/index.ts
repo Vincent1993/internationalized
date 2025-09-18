@@ -5,6 +5,19 @@
 // ==================== 核心 API ====================
 export { NumberFormatProvider } from './context';
 export { createNumberFormat, resolveFormatOptions } from './formatter';
+export {
+  resolveFormatTemplate,
+  configureFormatTemplate,
+  getFormatTemplateConfig,
+  registerTemplateHandler,
+  unregisterTemplateHandler,
+  resetFormatTemplateConfig,
+  setTemplateTypeDefaults,
+  type FormatTemplateResolution,
+  type TemplateConfigSnapshot,
+  type TemplateHandler,
+  type FormatTemplateConfig,
+} from './template';
 
 // ==================== 核心类型 ====================
 export type {
