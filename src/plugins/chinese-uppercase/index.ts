@@ -113,7 +113,8 @@ function toChineseUppercase(value: number): string {
   }
   const bigValue = new Big(value);
   const isNegative = bigValue.lt(0);
-  const normalized = bigValue.abs().toString();
+  const absValue = bigValue.abs();
+  const normalized = absValue.toFixed();
   const [integerPartRaw, decimalPart] = normalized.split('.');
   const integerPart = convertIntegerToChinese(integerPartRaw);
   const decimalPartUpper = convertDecimalToChinese(decimalPart);

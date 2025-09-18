@@ -28,6 +28,23 @@ describe('中文大写数字插件组', () => {
     expect(formatter.format(-32).formattedValue).toBe('负叁拾贰');
   });
 
+  it('应能处理兆级别的大数', () => {
+    const formatter = createNumberFormat({ style: 'cn-upper' });
+    expect(formatter.format(1_000_000_000_000).formattedValue).toBe('壹兆');
+    expect(formatter.format(1_000_000_000_000_000).formattedValue).toBe('壹仟兆');
+  });
+
+  it('应能处理包含多个大数单位的复杂数值', () => {
+    const formatter = createNumberFormat({ style: 'cn-upper' });
+    const value = 1_000_200_030_004_000;
+    expect(formatter.format(value).formattedValue).toBe('壹仟兆贰仟亿叁仟万肆仟');
+  });
+
+  it('应能处理极小的小数', () => {
+    const formatter = createNumberFormat({ style: 'cn-upper' });
+    expect(formatter.format(0.0000001).formattedValue).toBe('零点零零零零零零壹');
+  });
+
   it('应能与 fallback 插件协同工作，处理无效值', () => {
     const formatter = createNumberFormat({ style: 'cn-upper' });
     expect(formatter.format(null).formattedValue).toBe('N/A');
@@ -47,6 +64,20 @@ describe('中文大写数字插件组', () => {
       const result = parser.parse('负叁拾贰');
       expect(result.success).toBe(true);
       expect(result.value).toBe(-32);
+    });
+
+    it('应能解析兆级别的大数', () => {
+      const parser = new NumberParser({ style: 'cn-upper' });
+      const result = parser.parse('玖仟零柒兆壹仟玖佰玖拾贰亿伍仟肆佰柒拾肆万玖佰玖拾壹');
+      expect(result.success).toBe(true);
+      expect(result.value).toBe(Number.MAX_SAFE_INTEGER);
+    });
+
+    it('应能解析极小的小数', () => {
+      const parser = new NumberParser({ style: 'cn-upper' });
+      const result = parser.parse('零点零零零零零零壹');
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(0.0000001);
     });
 
     it('遇到无法解析的字符应返回失败', () => {
