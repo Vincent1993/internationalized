@@ -7,6 +7,9 @@ import {
   formatAsCurrencyEx,
   formatAsPercentEx,
   formatAsPerMilleEx,
+  formatAsPerMyriadEx,
+  formatAsPercentagePointEx,
+  formatAsChineseUppercaseEx,
   formatAsCompactEx,
   formatAsScientificEx,
   clearCache,
@@ -55,6 +58,27 @@ describe('FP 格式化器扩展结果', () => {
     expect(result.formattedValue).toBe('123.4‰');
     expect(result.resolvedOptions.style).toBe('decimal');
     expect(result.resolvedOptions.notation).toBe('standard');
+  });
+
+  it('formatAsPerMyriadEx 应该渲染万分比并保留扩展选项', () => {
+    const result = formatAsPerMyriadEx(0.01234, { maximumFractionDigits: 1 });
+
+    expect(result.formattedValue).toBe('123.4‱');
+    expect(result.resolvedOptions.style).toBe('decimal');
+  });
+
+  it('formatAsPercentagePointEx 应该渲染百分点并保留扩展选项', () => {
+    const result = formatAsPercentagePointEx(0.1234, { maximumFractionDigits: 2 });
+
+    expect(result.formattedValue).toBe('12.34pp');
+    expect(result.resolvedOptions.style).toBe('decimal');
+  });
+
+  it('formatAsChineseUppercaseEx 应该返回中文大写数字', () => {
+    const result = formatAsChineseUppercaseEx(1234.56);
+
+    expect(result.formattedValue).toBe('壹仟贰佰叁拾肆点伍陆');
+    expect(result.resolvedOptions.originalStyle).toBe('cn-upper');
   });
 
   it('formatAsCompactEx 应该启用紧凑记数法', () => {

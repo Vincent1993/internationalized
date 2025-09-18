@@ -44,6 +44,9 @@ const NumberFormatContext = createContext<NumberFormatContextValue | null>(null)
  *       { pattern: '.*_ratio$', options: { style: 'percent', maximumFractionDigits: 1 } },
  *       { pattern: '.*_count$', options: { style: 'decimal', useGrouping: true } },
  *       { pattern: '.*_permille$', options: { style: 'per-mille' } },
+ *       { pattern: '.*_permyriad$', options: { style: 'per-myriad' } },
+ *       { pattern: '.*_pp$', options: { style: 'percentage-point' } },
+ *       { pattern: '.*_cn_upper$', options: { style: 'cn-upper' } },
  *     ]
  *   };
  *

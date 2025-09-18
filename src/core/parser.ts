@@ -5,7 +5,7 @@
 
 import Big from 'big.js';
 import { getPluginRegistry } from '../plugins';
-import type { ParseExecutionContext } from '../plugins/types';
+import type { ExtendedStyle, ParseExecutionContext } from '../plugins/types';
 import type { UseFormatOptions } from './types';
 
 // ==================== 常量定义 ====================
@@ -29,6 +29,15 @@ const currencyCodePattern = {
 } as const;
 
 /**
+ * 插件样式集合，用于在创建 Intl.NumberFormat 时回退到原生支持的样式
+ */
+const pluginStyles = new Set<ExtendedStyle>(['per-mille', 'per-myriad', 'percentage-point', 'cn-upper']);
+
+function isIntlStyle(style: ExtendedStyle): style is Intl.NumberFormatOptions['style'] {
+  return style === 'decimal' || style === 'currency' || style === 'percent' || style === 'unit';
+}
+
+/**
  * 百分号模式
  */
 const percentPattern = /%$/;
@@ -37,6 +46,16 @@ const percentPattern = /%$/;
  * 千分号模式
  */
 const perMillePattern = /‰$/;
+
+/**
+ * 万分号模式
+ */
+const perMyriadPattern = /‱$/;
+
+/**
+ * 百分点模式
+ */
+const percentagePointPattern = /pp$/i;
 
 /**
  * 小数格式验证模式
@@ -68,6 +87,7 @@ const specialValues = {
 const mathConstants = {
   PERCENT_DIVISOR: '100',
   PER_MILLE_DIVISOR: '1000',
+  PER_MYRIAD_DIVISOR: '10000',
   ZERO: '0',
 } as const;
 
@@ -152,8 +172,7 @@ export class NumberParser {
     };
 
     // 创建格式化器（用于获取分隔符等信息）
-    // per-mille 不是标准的 Intl.NumberFormat 样式，所以我们使用 decimal 作为回退
-    const formatterStyle = this.options.style === 'per-mille' ? 'decimal' : this.options.style;
+    const formatterStyle = this.resolveFormatterStyle(this.options.style);
 
     this.formatter = new Intl.NumberFormat(this.options.locale, {
       style: formatterStyle,
@@ -312,6 +331,12 @@ export class NumberParser {
         return this.parseCurrency(input);
       case 'per-mille':
         return this.parsePerMille(input);
+      case 'per-myriad':
+        return this.parsePerMyriad(input);
+      case 'percentage-point':
+        return this.parsePercentagePoint(input);
+      case 'cn-upper':
+        return this.parseDecimal(input);
       case 'unit':
         return this.parseDecimal(input);
       case 'decimal':
@@ -422,6 +447,54 @@ export class NumberParser {
       return bigResult.toNumber();
     } catch (error) {
       throw new Error('Failed to calculate per-mille');
+    }
+  }
+
+  /**
+   * 解析万分比格式
+   */
+  private parsePerMyriad(input: string): number {
+    const withoutSymbol = input.replace(perMyriadPattern, '').trim();
+
+    if (input === withoutSymbol) {
+      if (!this.options.strict) {
+        return this.parseDecimal(withoutSymbol);
+      }
+      throw new Error('Per-myriad symbol (‱) is required');
+    }
+
+    const decimal = this.parseDecimal(withoutSymbol);
+
+    try {
+      const bigDecimal = new Big(decimal);
+      const bigResult = bigDecimal.div(mathConstants.PER_MYRIAD_DIVISOR);
+      return bigResult.toNumber();
+    } catch (error) {
+      throw new Error('Failed to calculate per-myriad');
+    }
+  }
+
+  /**
+   * 解析百分点格式
+   */
+  private parsePercentagePoint(input: string): number {
+    const withoutSuffix = input.replace(percentagePointPattern, '').trim();
+
+    if (input === withoutSuffix) {
+      if (!this.options.strict) {
+        return this.parseDecimal(withoutSuffix);
+      }
+      throw new Error('Percentage point suffix (pp) is required');
+    }
+
+    const decimal = this.parseDecimal(withoutSuffix);
+
+    try {
+      const bigDecimal = new Big(decimal);
+      const bigResult = bigDecimal.div(mathConstants.PERCENT_DIVISOR);
+      return bigResult.toNumber();
+    } catch (error) {
+      throw new Error('Failed to calculate percentage point');
     }
   }
 
@@ -613,14 +686,25 @@ export class NumberParser {
   updateOptions(options: Partial<ParseOptions>): void {
     this.options = { ...this.options, ...options };
 
-    // 处理 per-mille 样式的特殊情况
-    const formatterStyle = this.options.style === 'per-mille' ? 'decimal' : this.options.style;
-
     this.formatter = new Intl.NumberFormat(this.options.locale, {
-      style: formatterStyle,
+      style: this.resolveFormatterStyle(this.options.style),
       currency: this.options.currency,
       notation: this.options.notation,
     });
+  }
+
+  private resolveFormatterStyle(
+    style: ExtendedStyle | undefined,
+  ): Intl.NumberFormatOptions['style'] {
+    if (!style) {
+      return 'decimal';
+    }
+
+    if (!pluginStyles.has(style) && isIntlStyle(style)) {
+      return style;
+    }
+
+    return 'decimal';
   }
 }
 

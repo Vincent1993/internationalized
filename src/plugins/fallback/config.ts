@@ -37,6 +37,33 @@ export const DEFAULT_FALLBACK_STRATEGIES: Record<NonNullable<ExtendedStyle>, Fal
     onNegativeInfinity: '--',
     preserveFormatting: true,
   },
+  /** 万分比格式：在回退文本中包含 '‱' */
+  'per-myriad': {
+    onNull: '--',
+    onUndefined: '--',
+    onNaN: '--',
+    onInfinity: '--',
+    onNegativeInfinity: '--',
+    preserveFormatting: true,
+  },
+  /** 百分点格式：在回退文本中包含 'pp' */
+  'percentage-point': {
+    onNull: '--',
+    onUndefined: '--',
+    onNaN: '--',
+    onInfinity: '--',
+    onNegativeInfinity: '--',
+    preserveFormatting: true,
+  },
+  /** 中文大写数字格式 */
+  'cn-upper': {
+    onNull: 'N/A',
+    onUndefined: 'N/A',
+    onNaN: 'N/A',
+    onInfinity: '∞',
+    onNegativeInfinity: '-∞',
+    preserveFormatting: false,
+  },
   /** 普通小数格式：使用简单的符号 */
   decimal: {
     onNull: 'N/A',

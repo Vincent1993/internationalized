@@ -81,6 +81,18 @@ import { NumberFormat } from '@dfx/number-format';
 <NumberFormat value={0.1234} options={{ style: 'per-mille' }} />
 // 输出：123.4‰
 
+// 万分比（百分点）格式
+<NumberFormat value={0.1234} options={{ style: 'per-myriad' }} />
+// 输出：1234‱
+
+// 百分点格式
+<NumberFormat value={0.1234} options={{ style: 'percentage-point' }} />
+// 输出：12.34pp
+
+// 中文大写数字
+<NumberFormat value={1234.56} options={{ style: 'cn-upper' }} />
+// 输出：壹仟贰佰叁拾肆点伍陆
+
 // 固定小数位数
 <NumberFormat value={123.456789} options={{ style: 'decimal', extend_fixDecimals: 2 }} />
 // 输出：123.46
@@ -96,6 +108,9 @@ import { NumberFormat } from '@dfx/number-format';
 | **货币格式** | `<NumberFormat style="currency">` | `formatAsCurrency` | 多币种格式化，自动添加货币符号 |
 | **百分比格式** | `<NumberFormat style="percent">` | `formatAsPercent` | 百分比显示，自动转换数值范围 |
 | **千分比格式** | `<NumberFormat style="per-mille">` | `formatAsPerMille` | 千分比显示，使用 ‰ 符号 |
+| **万分比格式** | `<NumberFormat style="per-myriad">` | `formatAsPerMyriad` | 万分比/基点显示，使用 ‱ 符号 |
+| **百分点格式** | `<NumberFormat style="percentage-point">` | `formatAsPercentagePoint` | 百分点显示，使用 pp 后缀 |
+| **中文大写数字** | `<NumberFormat style="cn-upper">` | `formatAsChineseUppercase` | 将数字转换为中文大写 |
 | **固定小数位数** | `extend_fixDecimals` 选项 | 扩展配置 | 强制固定小数位数，覆盖用户设置 |
 | **紧凑格式** | `<NumberFormat notation="compact">` | `formatAsCompact` | 大数值紧凑显示（如 1.2M） |
 | **科学记数法** | `<NumberFormat notation="scientific">` | `formatAsScientific` | 科学记数法格式（如 1.23E3） |
@@ -109,6 +124,9 @@ import { NumberFormat } from '@dfx/number-format';
 | **货币解析** | `useParse` | `parseCurrency` | 解析货币格式字符串 |
 | **百分比解析** | `useParse` | `parsePercent` | 解析百分比格式字符串 |
 | **千分比解析** | `useParse` | `parsePerMille` | 解析千分比格式字符串 |
+| **万分比解析** | `useParse` | `parsePerMyriad` | 解析万分比/基点字符串 |
+| **百分点解析** | `useParse` | `parsePercentagePoint` | 解析百分点 (pp) 字符串 |
+| **中文大写数字解析** | `useParse` | `parseChineseUppercase` | 解析中文大写数字字符串 |
 | **智能解析** | `useAutoParse` | `parseAuto` | 自动检测格式并解析 |
 | **规则匹配解析** | `useAutoParse` | - | 基于规则自动选择解析方式 |
 
@@ -132,7 +150,7 @@ import { NumberFormat } from '@dfx/number-format';
 | `UseNumberFormatResult` | 格式化结果 | `{ formattedValue, parts, sign, isNaN }` |
 | `ParseResult` | 解析结果 | `{ value, success, error, input, mathSign, isZero, isInteger, isNegative, isPositive, isNegativeZero }` |
 | `MetricFormatRule` | 规则定义 | `{ name: string, options: ... }` |
-| `ExtendedStyle` | 扩展样式 | `'decimal' \| 'currency' \| 'per-mille'` |
+| `ExtendedStyle` | 扩展样式 | `'decimal' \| 'currency' \| 'percent' \| 'per-mille' \| 'per-myriad' \| 'percentage-point' \| 'cn-upper'` |
 
 ## 🎯 使用场景对比
 

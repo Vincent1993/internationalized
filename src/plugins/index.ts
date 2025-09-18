@@ -19,6 +19,10 @@ export {
 
 // ==================== 内置插件 ====================
 export { perMillePluginGroup } from './per-mille';
+export { perMyriadPluginGroup } from './per-myriad';
+export { percentagePointPluginGroup } from './percentage-point';
+export { chineseUppercasePluginGroup } from './chinese-uppercase';
+export { toChineseUppercase } from './chinese-uppercase';
 export { fallbackPlugin, createFallbackPlugin } from './fallback';
 export { fixDecimalsPlugin } from './fix-decimals';
 

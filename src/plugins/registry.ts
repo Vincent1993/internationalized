@@ -13,6 +13,9 @@ import type {
   PluginGroup,
 } from './types';
 import { perMillePluginGroup } from './per-mille';
+import { perMyriadPluginGroup } from './per-myriad';
+import { percentagePointPluginGroup } from './percentage-point';
+import { chineseUppercasePluginGroup } from './chinese-uppercase';
 import { fallbackPlugin } from './fallback';
 import { validatorPlugin } from './validator';
 import { fixDecimalsPlugin } from './fix-decimals';
@@ -25,6 +28,9 @@ class PluginRegistry {
   constructor() {
     this.register(validatorPlugin);
     this.registerGroup(perMillePluginGroup);
+    this.registerGroup(perMyriadPluginGroup);
+    this.registerGroup(percentagePointPluginGroup);
+    this.registerGroup(chineseUppercasePluginGroup);
     this.register(fallbackPlugin);
     this.register(fixDecimalsPlugin);
   }

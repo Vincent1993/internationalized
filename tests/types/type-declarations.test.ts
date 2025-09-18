@@ -91,6 +91,27 @@ describe('类型验证测试', () => {
       };
 
       expect(rule.options.style).toBe('per-mille');
+
+      const ruleMyriad: MetricFormatRule = {
+        pattern: /.*_permyriad$/,
+        options: { style: 'per-myriad' as any },
+      };
+
+      expect(ruleMyriad.options.style).toBe('per-myriad');
+
+      const rulePercentagePoint: MetricFormatRule = {
+        pattern: /.*_pp$/,
+        options: { style: 'percentage-point' as any },
+      };
+
+      expect(rulePercentagePoint.options.style).toBe('percentage-point');
+
+      const ruleChineseUpper: MetricFormatRule = {
+        pattern: /.*_cn_upper$/,
+        options: { style: 'cn-upper' as any },
+      };
+
+      expect(ruleChineseUpper.options.style).toBe('cn-upper');
     });
 
     it('应该构建有效的规则数组', () => {

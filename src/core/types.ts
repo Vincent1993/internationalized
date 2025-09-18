@@ -44,7 +44,9 @@ export type ValidatedFormatOptions<T extends Intl.NumberFormatOptions> =
  *   { pattern: /price|cost/i, options: { style: 'currency', currency: 'USD' } },
  *
  *   // 千分号格式
- *   { pattern: /.*_permille$/i, options: { style: 'per-mille' } }
+ *   { pattern: /.*_permille$/i, options: { style: 'per-mille' } },
+ *   { pattern: /.*_permyriad$/i, options: { style: 'per-myriad' } },
+ *   { pattern: /.*_pp$/i, options: { style: 'percentage-point' } }
  * ];
  * ```
  */

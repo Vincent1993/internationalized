@@ -7,11 +7,22 @@ import { NumberParser, createNumberParser, parseNumber } from '../../src/core/pa
 import { resetPlugins, clearRegisteredPlugins } from '../../src/plugins/registry';
 import type { FormatPlugin } from '../../src/plugins/types';
 import { perMillePluginGroup } from '../../src/plugins/per-mille';
+import { perMyriadPluginGroup } from '../../src/plugins/per-myriad';
+import { percentagePointPluginGroup } from '../../src/plugins/percentage-point';
+import { chineseUppercasePluginGroup } from '../../src/plugins/chinese-uppercase';
 import { fallbackPlugin } from '../../src/plugins/fallback';
 import { validatorPlugin } from '../../src/plugins/validator';
 import { fixDecimalsPlugin } from '../../src/plugins/fix-decimals';
 
-const defaultPlugins = [validatorPlugin, perMillePluginGroup, fallbackPlugin, fixDecimalsPlugin];
+const defaultPlugins = [
+  validatorPlugin,
+  perMillePluginGroup,
+  perMyriadPluginGroup,
+  percentagePointPluginGroup,
+  chineseUppercasePluginGroup,
+  fallbackPlugin,
+  fixDecimalsPlugin,
+];
 
 describe('NumberParser', () => {
   describe('基础解析功能', () => {
@@ -136,6 +147,60 @@ describe('NumberParser', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Per-mille symbol');
+    });
+  });
+
+  describe('万分比解析', () => {
+    it('应该解析万分比格式', () => {
+      const parser = new NumberParser({ style: 'per-myriad' });
+      const result = parser.parse('123.4‱');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(0.01234);
+    });
+
+    it('应该在严格模式下要求万分符', () => {
+      const parser = new NumberParser({ style: 'per-myriad', strict: true });
+      const result = parser.parse('123.4');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Per-myriad symbol');
+    });
+  });
+
+  describe('百分点解析', () => {
+    it('应该解析百分点格式', () => {
+      const parser = new NumberParser({ style: 'percentage-point' });
+      const result = parser.parse('12.3pp');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(0.123);
+    });
+
+    it('应该在严格模式下要求 pp 后缀', () => {
+      const parser = new NumberParser({ style: 'percentage-point', strict: true });
+      const result = parser.parse('12.3');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Percentage point suffix');
+    });
+  });
+
+  describe('中文大写数字解析', () => {
+    it('应该解析中文大写数字字符串', () => {
+      const parser = new NumberParser({ style: 'cn-upper' });
+      const result = parser.parse('壹仟贰佰叁拾肆点伍陆');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBeCloseTo(1234.56);
+    });
+
+    it('应该解析带负号的中文大写数字', () => {
+      const parser = new NumberParser({ style: 'cn-upper' });
+      const result = parser.parse('负叁拾贰');
+
+      expect(result.success).toBe(true);
+      expect(result.value).toBe(-32);
     });
   });
 
