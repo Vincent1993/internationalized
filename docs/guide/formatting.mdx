@@ -35,6 +35,21 @@ formatAsCurrency(88.6, 'EUR');
 
 函数式入口便于在非 React 环境或服务端场景使用。
 
+## 动态小数位控制
+
+通过 `extend_dynamicDecimals` 扩展选项，可以自动为极小的小数值提升精度，直到出现首个非零小数；若超出阈值，则回退到科学计数法：
+
+```tsx
+import { NumberFormat } from 'internationalized';
+
+<NumberFormat
+  value={0.00000031}
+  style="decimal"
+  extend_dynamicDecimals={{ maxFractionDigits: 8, additionalDigits: 1 }}
+/>;
+// => "0.00000031"
+```
+
 ## 插件扩展
 
 通过插件可以轻松扩展新的格式化模式：

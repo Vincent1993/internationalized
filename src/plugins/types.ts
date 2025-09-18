@@ -10,6 +10,36 @@ export type ExtendedStyle =
   | 'cn-upper';
 
 /**
+ * 动态小数位扩展配置
+ */
+export interface DynamicDecimalControlOptions {
+  /** 是否启用该扩展（默认启用） */
+  enabled?: boolean;
+  /**
+   * 在找到第一个非零小数位之前，最多探测的小数位数。
+   * 超出该限制后将使用科学计数法。
+   */
+  maxFractionDigits?: number;
+  /**
+   * 在定位到第一个非零小数位后，额外保留的小数位数。
+   * 用于避免因四舍五入导致的信息损失。
+   */
+  additionalDigits?: number;
+  /**
+   * 当超过 maxFractionDigits 限制时采用的记数法，默认为 scientific。
+   */
+  fallbackNotation?: Extract<Intl.NumberFormatOptions['notation'], 'scientific' | 'engineering'>;
+  /**
+   * 使用科学计数法时应用的最大小数位数（默认 3 位）。
+   */
+  fallbackMaximumFractionDigits?: number;
+  /**
+   * 限定扩展生效的样式集合（默认对 decimal/percent/per-mille/per-myriad/percentage-point 生效）。
+   */
+  applyToStyles?: ExtendedStyle[];
+}
+
+/**
  * 插件执行阶段
  */
 export type PluginPhase =
@@ -194,4 +224,6 @@ export interface CoreExtensionOptions {
   extend_negativeZero?: 'as-zero' | 'keep';
   /** 固定小数位数（自动设置 minimumFractionDigits 和 maximumFractionDigits 为相同值） */
   extend_fixDecimals?: number;
+  /** 根据数值动态扩展小数位 */
+  extend_dynamicDecimals?: DynamicDecimalControlOptions;
 }

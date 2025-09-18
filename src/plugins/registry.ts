@@ -19,6 +19,7 @@ import { chineseUppercasePluginGroup } from './chinese-uppercase';
 import { fallbackPlugin } from './fallback';
 import { validatorPlugin } from './validator';
 import { fixDecimalsPlugin } from './fix-decimals';
+import { dynamicDecimalPrecisionPlugin } from './dynamic-decimals';
 
 class PluginRegistry {
   private readonly registrations = new Map<string, PluginRegistration>();
@@ -33,6 +34,7 @@ class PluginRegistry {
     this.registerGroup(chineseUppercasePluginGroup);
     this.register(fallbackPlugin);
     this.register(fixDecimalsPlugin);
+    this.register(dynamicDecimalPrecisionPlugin);
   }
 
   /** 注册一个独立的插件。 */

@@ -310,6 +310,7 @@ export function createFormatterCore(
       extend_signZeroMode: opts.extend_signZeroMode ?? ctx?.extend_signZeroMode,
       extend_negativeZero: opts.extend_negativeZero ?? ctx?.extend_negativeZero,
       extend_fixDecimals: opts.extend_fixDecimals ?? ctx?.extend_fixDecimals,
+      extend_dynamicDecimals: opts.extend_dynamicDecimals ?? ctx?.extend_dynamicDecimals,
     };
     return extend;
   };
