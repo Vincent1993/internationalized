@@ -68,6 +68,10 @@ export const DEFAULT_FALLBACK_STRATEGIES: Record<NonNullable<ExtendedStyle>, Fal
  *   defaultStrategy: { onNull: 'N/A' },
  * });
  */
+function isExtendedStyleKey(key: string): key is NonNullable<ExtendedStyle> {
+  return Object.prototype.hasOwnProperty.call(DEFAULT_FALLBACK_STRATEGIES, key);
+}
+
 export const DEFAULT_GLOBAL_FALLBACK_CONFIG: ContextAwareFallbackConfig = {
   enabled: true,
   defaultStrategy: {
@@ -78,10 +82,10 @@ export const DEFAULT_GLOBAL_FALLBACK_CONFIG: ContextAwareFallbackConfig = {
     onNegativeInfinity: '-∞',
     preserveFormatting: false,
   },
-  styleStrategies: (
-    Object.entries(DEFAULT_FALLBACK_STRATEGIES) as [ExtendedStyle, FallbackStrategy][]
-  ).map(([style, strategy]) => ({
-    style,
-    strategy,
-  })),
+  styleStrategies: Object.keys(DEFAULT_FALLBACK_STRATEGIES)
+    .filter(isExtendedStyleKey)
+    .map((style) => ({
+      style,
+      strategy: DEFAULT_FALLBACK_STRATEGIES[style],
+    })),
 };

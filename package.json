@@ -12,37 +12,31 @@
   "publishConfig": {
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
-    "main": "./dist/index.js",
+    "main": "./dist/index.mjs",
     "exports": {
       "./": {
         "types": "./dist/index.d.ts",
-        "import": "./dist/index.mjs",
-        "require": "./dist/index.js"
+        "import": "./dist/index.mjs"
       },
       "./plugins": {
         "types": "./dist/plugins/index.d.ts",
-        "import": "./dist/plugins.mjs",
-        "require": "./dist/plugins.js"
+        "import": "./dist/plugins.mjs"
       },
       "./hooks": {
         "types": "./dist/hooks/index.d.ts",
-        "import": "./dist/hooks.mjs",
-        "require": "./dist/hooks.js"
+        "import": "./dist/hooks.mjs"
       },
       "./core": {
         "types": "./dist/core/index.d.ts",
-        "import": "./dist/core.mjs",
-        "require": "./dist/core.js"
+        "import": "./dist/core.mjs"
       },
       "./components": {
         "types": "./dist/components/index.d.ts",
-        "import": "./dist/components.mjs",
-        "require": "./dist/components.js"
+        "import": "./dist/components.mjs"
       },
       "./fp": {
         "types": "./dist/fp/index.d.ts",
-        "import": "./dist/fp.mjs",
-        "require": "./dist/fp.js"
+        "import": "./dist/fp.mjs"
       }
     }
   },
@@ -70,7 +64,6 @@
   "devDependencies": {
     "@rslib/core": "^0.13.3",
     "@rslint/core": "^0.1.13",
-    "@rspress/plugin-last-updated": "2.0.0-beta.20",
     "@rspress/plugin-twoslash": "2.0.0-beta.32",
     "@rspress/plugin-typedoc": "2.0.0-beta.32",
     "@testing-library/dom": "10.4.0",
@@ -87,16 +80,15 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "rspress": "2.0.0-beta.21",
-    "typescript": "^5.9.2",
+    "typescript": "5",
     "vitest": "^3.2.4"
   },
   "scripts": {
     "test": "vitest",
-    "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:coverage:ci": "vitest run --coverage --coverage.reporter=text-summary --testNamePattern='^(?!.*缓存应该提高重复调用的性能).*$'",
-    "lint": "node ./scripts/run-rslint.mjs",
-    "lint:fix": "node ./scripts/run-rslint.mjs --fix",
+    "lint": "rslint",
+    "lint:fix": "rslint --fix",
     "typecheck": "tsc --noEmit",
     "build": "rslib build",
     "docs:dev": "rspress dev",

@@ -61,25 +61,23 @@ export function getMemoizedFormatter(options: UseFormatOptions = {}): NumberForm
       return DEFAULT_FORMATTER_CACHE_KEY;
     }
 
-    const baseOptions: Record<string, unknown> = {
-      locale: options.locale ?? 'zh-CN',
-      style: options.style ?? 'decimal',
-      useGrouping: options.useGrouping ?? true,
+    const {
+      locale: providedLocale,
+      style: providedStyle,
+      useGrouping: providedUseGrouping,
+      ...restOptions
+    } = options;
+
+    const normalizedOptions: UseFormatOptions = {
+      ...restOptions,
+      locale: providedLocale ?? 'zh-CN',
+      style: providedStyle ?? 'decimal',
+      useGrouping: providedUseGrouping ?? true,
     };
 
-    const remainingEntries = Object.entries(options as Record<string, unknown>)
-      .filter(([key]) => key !== 'locale' && key !== 'style' && key !== 'useGrouping')
-      .reduce<Record<string, unknown>>((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {});
+    const normalizedRecord: Record<string, unknown> = { ...normalizedOptions };
 
-    const normalizedOptions = {
-      ...baseOptions,
-      ...remainingEntries,
-    };
-
-    return createCacheKey(normalizedOptions, { skipUndefined: true });
+    return createCacheKey(normalizedRecord, { skipUndefined: true });
   })();
 
   let formatter = formatterCache.get(key);

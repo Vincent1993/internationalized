@@ -20,10 +20,7 @@ export interface FormatterDefaults {
   scientific: UseFormatOptions;
 }
 
-/**
- * 默认配置项 - 可以被全局修改
- */
-let defaultConfigs: FormatterDefaults = {
+const INITIAL_DEFAULTS: FormatterDefaults = {
   decimal: {
     style: 'decimal',
   },
@@ -56,12 +53,41 @@ let defaultConfigs: FormatterDefaults = {
   },
 };
 
+function cloneDefaults(): FormatterDefaults {
+  return {
+    decimal: { ...INITIAL_DEFAULTS.decimal },
+    integer: { ...INITIAL_DEFAULTS.integer },
+    currency: { ...INITIAL_DEFAULTS.currency },
+    percent: { ...INITIAL_DEFAULTS.percent },
+    perMille: { ...INITIAL_DEFAULTS.perMille },
+    compact: { ...INITIAL_DEFAULTS.compact },
+    scientific: { ...INITIAL_DEFAULTS.scientific },
+  };
+}
+
+function isFormatterKey(key: string): key is keyof FormatterDefaults {
+  return Object.prototype.hasOwnProperty.call(INITIAL_DEFAULTS, key);
+}
+
+/**
+ * 默认配置项 - 可以被全局修改
+ */
+let defaultConfigs: FormatterDefaults = cloneDefaults();
+
 /**
  * 获取当前的默认配置
- * @returns 当前的默认配置对象的深拷贝
+ * @returns 当前的默认配置对象的浅拷贝（每个配置独立克隆）
  */
 export function getDefaultConfigs(): FormatterDefaults {
-  return JSON.parse(JSON.stringify(defaultConfigs));
+  return {
+    decimal: { ...defaultConfigs.decimal },
+    integer: { ...defaultConfigs.integer },
+    currency: { ...defaultConfigs.currency },
+    percent: { ...defaultConfigs.percent },
+    perMille: { ...defaultConfigs.perMille },
+    compact: { ...defaultConfigs.compact },
+    scientific: { ...defaultConfigs.scientific },
+  };
 }
 
 /**
@@ -73,17 +99,18 @@ export function updateDefaultConfig<T extends keyof FormatterDefaults>(
   type: T,
   config: Partial<FormatterDefaults[T]>,
 ): void {
+  const baseConfig = defaultConfigs[type];
   const mergedConfig: FormatterDefaults[T] = {
-    ...defaultConfigs[type],
+    ...baseConfig,
     ...config,
   };
 
   if (
     type === 'perMille' &&
-    typeof (config as UseFormatOptions).maximumFractionDigits === 'number' &&
-    (config as UseFormatOptions).extend_fixDecimals === undefined
+    typeof config?.maximumFractionDigits === 'number' &&
+    config.extend_fixDecimals === undefined
   ) {
-    mergedConfig.extend_fixDecimals = (config as UseFormatOptions).maximumFractionDigits;
+    mergedConfig.extend_fixDecimals = config.maximumFractionDigits;
   }
 
   defaultConfigs[type] = mergedConfig;
@@ -96,49 +123,23 @@ export function updateDefaultConfig<T extends keyof FormatterDefaults>(
 export function updateDefaultConfigs(
   configs: Partial<{ [K in keyof FormatterDefaults]: Partial<FormatterDefaults[K]> }>,
 ): void {
-  Object.entries(configs).forEach(([type, config]) => {
-    if (config && type in defaultConfigs) {
-      updateDefaultConfig(type as keyof FormatterDefaults, config);
+  for (const key of Object.keys(configs)) {
+    if (!isFormatterKey(key)) {
+      continue;
     }
-  });
+
+    const config = configs[key];
+    if (config) {
+      updateDefaultConfig(key, config);
+    }
+  }
 }
 
 /**
  * 重置所有默认配置为初始值
  */
 export function resetDefaultConfigs(): void {
-  defaultConfigs = {
-    decimal: {
-      style: 'decimal',
-    },
-    integer: {
-      style: 'decimal',
-      maximumFractionDigits: 0,
-    },
-    currency: {
-      style: 'currency',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    },
-    percent: {
-      style: 'percent',
-      maximumFractionDigits: 2,
-    },
-    perMille: {
-      style: 'per-mille',
-      maximumFractionDigits: 2,
-    },
-    compact: {
-      style: 'decimal',
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    },
-    scientific: {
-      style: 'decimal',
-      notation: 'scientific',
-      maximumFractionDigits: 3,
-    },
-  };
+  defaultConfigs = cloneDefaults();
 }
 
 /**
@@ -166,11 +167,9 @@ export function config(
   configs?: Partial<{ [K in keyof FormatterDefaults]: Partial<FormatterDefaults[K]> }>,
 ): FormatterDefaults {
   if (configs === undefined) {
-    // 获取当前配置
     return getDefaultConfigs();
   }
 
-  // 更新配置
   updateDefaultConfigs(configs);
   return getDefaultConfigs();
 }

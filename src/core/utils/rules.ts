@@ -1,21 +1,33 @@
 import type { MetricFormatRule } from '../types';
 
+type NamedRule = Extract<MetricFormatRule, { name: string }>;
+type PatternRule = Extract<MetricFormatRule, { pattern: string | RegExp }>;
+
+type RuleWithNameAndPattern = NamedRule & PatternRule;
+
+function hasName(rule: MetricFormatRule): rule is NamedRule | RuleWithNameAndPattern {
+  return 'name' in rule && typeof rule.name === 'string' && rule.name.length > 0;
+}
+
+function hasPattern(rule: MetricFormatRule): rule is PatternRule | RuleWithNameAndPattern {
+  return 'pattern' in rule && rule.pattern !== undefined;
+}
+
+function stripPattern(rule: RuleWithNameAndPattern): NamedRule {
+  const { name, options } = rule;
+  return { name, options };
+}
+
 /**
  * 验证和规范化规则，确保 name 和 pattern 互斥
  */
 function normalizeRule(rule: MetricFormatRule): MetricFormatRule {
-  const ruleObj = rule as any;
-  const hasName = ruleObj.name != null && ruleObj.name !== '';
-  const hasPattern = ruleObj.pattern != null;
-
-  if (hasName && hasPattern) {
+  if (hasName(rule) && hasPattern(rule)) {
     console.warn(
-      `MetricFormatRule: name 和 pattern 不应同时存在。优先使用 name="${ruleObj.name}"，忽略 pattern。`,
-      { rule: ruleObj },
+      `MetricFormatRule: name 和 pattern 不应同时存在。优先使用 name="${rule.name}"，忽略 pattern。`,
+      { rule },
     );
-    // 返回只包含 name 的规则，移除 pattern
-    const { pattern, ...rest } = ruleObj;
-    return rest as MetricFormatRule;
+    return stripPattern(rule);
   }
 
   return rule;
@@ -23,10 +35,10 @@ function normalizeRule(rule: MetricFormatRule): MetricFormatRule {
 
 function getRuleKey(rule: MetricFormatRule): string {
   const normalizedRule = normalizeRule(rule);
-  if ('name' in normalizedRule) {
+  if (hasName(normalizedRule)) {
     return `name:${normalizedRule.name}`;
   }
-  if ('pattern' in normalizedRule) {
+  if (hasPattern(normalizedRule)) {
     const { pattern } = normalizedRule;
     if (pattern instanceof RegExp) {
       return `pattern:${pattern.source}:${pattern.flags}`;
@@ -36,6 +48,33 @@ function getRuleKey(rule: MetricFormatRule): string {
   return `content:${JSON.stringify(normalizedRule)}`;
 }
 
+function mergeRuleOptions(
+  existing: MetricFormatRule,
+  incoming: MetricFormatRule,
+): MetricFormatRule {
+  if (hasName(existing) && hasName(incoming)) {
+    return {
+      name: existing.name,
+      options: {
+        ...existing.options,
+        ...incoming.options,
+      },
+    };
+  }
+
+  if (hasPattern(existing) && hasPattern(incoming)) {
+    return {
+      pattern: existing.pattern,
+      options: {
+        ...existing.options,
+        ...incoming.options,
+      },
+    };
+  }
+
+  return incoming;
+}
+
 export function mergeRules(
   left: MetricFormatRule[],
   right: MetricFormatRule[],
@@ -43,33 +82,31 @@ export function mergeRules(
   const ruleMap = new Map<string, MetricFormatRule>();
   const insertOrder: string[] = [];
 
-  (left || []).forEach((rule) => {
+  for (const rule of left ?? []) {
     const normalizedRule = normalizeRule(rule);
     const key = getRuleKey(normalizedRule);
     ruleMap.set(key, normalizedRule);
     insertOrder.push(key);
-  });
+  }
 
-  (right || []).forEach((rule) => {
+  for (const rule of right ?? []) {
     const normalizedRule = normalizeRule(rule);
     const key = getRuleKey(normalizedRule);
     const existing = ruleMap.get(key);
+
     if (existing) {
-      // @ts-ignore
-      const mergedRule: MetricFormatRule = {
-        ...existing,
-        ...normalizedRule,
-        options: {
-          ...existing.options,
-          ...normalizedRule.options,
-        },
-      };
-      ruleMap.set(key, mergedRule);
+      ruleMap.set(key, mergeRuleOptions(existing, normalizedRule));
     } else {
       ruleMap.set(key, normalizedRule);
       insertOrder.push(key);
     }
-  });
+  }
 
-  return insertOrder.map((key) => ruleMap.get(key)!);
+  return insertOrder.map((key) => {
+    const normalizedRule = ruleMap.get(key);
+    if (!normalizedRule) {
+      throw new Error(`Missing rule for key: ${key}`);
+    }
+    return normalizedRule;
+  });
 }

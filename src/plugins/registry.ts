@@ -190,15 +190,19 @@ export function clearRegisteredPlugins(): void {
 }
 
 /** @internal */
+function isPluginGroup(candidate: FormatPlugin | PluginGroup): candidate is PluginGroup {
+  return typeof candidate === 'object' && candidate !== null && 'plugins' in candidate;
+}
+
 export function resetPlugins(plugins: (FormatPlugin | PluginGroup)[]): void {
   pluginRegistry.clear();
   // 始终保留核心扩展能力，保证 includeSign/negative-zero 等兼容特性可用
   pluginRegistry.registerGroup({ name: 'core-extensions', plugins: [] });
   plugins.forEach((p) => {
-    if ('plugins' in p) {
-      pluginRegistry.registerGroup(p as PluginGroup);
+    if (isPluginGroup(p)) {
+      pluginRegistry.registerGroup(p);
     } else {
-      pluginRegistry.register(p as FormatPlugin);
+      pluginRegistry.register(p);
     }
   });
 }

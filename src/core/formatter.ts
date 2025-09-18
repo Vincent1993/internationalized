@@ -11,6 +11,13 @@ import type {
   ResolvedFormatOptions,
 } from './types';
 
+const NATIVE_NUMBER_FORMAT_STYLES = ['decimal', 'currency', 'percent', 'unit'] as const;
+type NativeNumberFormatStyle = typeof NATIVE_NUMBER_FORMAT_STYLES[number];
+
+function isNativeNumberStyle(style: UseFormatOptions['style']): style is NativeNumberFormatStyle {
+  return typeof style === 'string' && NATIVE_NUMBER_FORMAT_STYLES.some((nativeStyle) => nativeStyle === style);
+}
+
 /**
  * 创建插件执行上下文
  */
@@ -106,7 +113,7 @@ function applyFormatPlugins(
     const isInvalid = detectValueState(originalInput) !== VALUE_STATE.VALID;
 
     return { ...finalResult, usedNumericValue: currentValue, isInvalidOrErrored: isInvalid };
-  } catch (_error) {
+  } catch {
     // 异常：仅走 post-process 链路
     const errorContext = createPluginContext(
       originalInput,
@@ -190,8 +197,11 @@ export function resolveFormatOptions(
     useGrouping: true,
     ...contextIntlOptions,
     ...intlOptions,
-    style: finalStyle as Intl.NumberFormatOptions['style'], // 插件会处理扩展类型
   };
+
+  if (isNativeNumberStyle(finalStyle)) {
+    baseOptions.style = finalStyle;
+  }
 
   // 符号显示策略改由插件处理（extend-sign）。此处仅保留 legacy includeSign 的元数据。
   const shouldIncludeSign = includeSign ?? contextIncludeSign ?? false;
@@ -204,7 +214,7 @@ export function resolveFormatOptions(
   try {
     // 对于插件扩展样式，需要转换为标准样式
     const resolveOptions = { ...baseOptions };
-    if (finalStyle && !['decimal', 'currency', 'percent', 'unit'].includes(finalStyle)) {
+    if (!isNativeNumberStyle(finalStyle)) {
       // 插件扩展样式转换为 decimal
       resolveOptions.style = 'decimal';
     }
