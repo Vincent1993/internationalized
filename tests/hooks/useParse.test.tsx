@@ -4,7 +4,7 @@
  */
 
 import { renderHook } from '@testing-library/react';
-import { useParse, useAutoParse } from '../../src/hooks/useParse';
+import { useParse } from '../../src/hooks/useParse';
 import { NumberFormatProvider } from '../../src/core/context';
 import type { ReactNode } from 'react';
 

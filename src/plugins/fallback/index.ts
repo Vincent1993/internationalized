@@ -104,8 +104,13 @@ export const createFallbackPlugin = (globalConfig?: ContextAwareFallbackConfig):
         case VALUE_STATE.NEGATIVE_INFINITY:
           fallbackText = strategy.onNegativeInfinity ?? '-∞';
           break;
-        default:
+        case VALUE_STATE.VALID:
           return { formattedValue: _formattedValue, parts: _parts };
+        default: {
+          const exhaustiveCheck: never = valueState;
+          void exhaustiveCheck;
+          throw new Error('Unhandled value state');
+        }
       }
 
       let prefixParts: Intl.NumberFormatPart[] = [];

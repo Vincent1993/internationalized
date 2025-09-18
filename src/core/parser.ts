@@ -187,10 +187,32 @@ export class NumberParser {
 
     const trimmed = input.trim();
     // 解析插件：pre-parse 阶段
+    const resolvedFormatterOptions = this.formatter.resolvedOptions();
+    const contextOptions: Intl.NumberFormatOptions & {
+      notation?: Intl.NumberFormatOptions['notation'];
+    } = {
+      notation: resolvedFormatterOptions.notation,
+      style: resolvedFormatterOptions.style,
+      currency: resolvedFormatterOptions.currency,
+      currencyDisplay: resolvedFormatterOptions.currencyDisplay,
+      currencySign: resolvedFormatterOptions.currencySign,
+      unit: resolvedFormatterOptions.unit,
+      unitDisplay: resolvedFormatterOptions.unitDisplay,
+      useGrouping: resolvedFormatterOptions.useGrouping,
+      minimumFractionDigits: resolvedFormatterOptions.minimumFractionDigits,
+      maximumFractionDigits: resolvedFormatterOptions.maximumFractionDigits,
+      minimumIntegerDigits: resolvedFormatterOptions.minimumIntegerDigits,
+      minimumSignificantDigits: resolvedFormatterOptions.minimumSignificantDigits,
+      maximumSignificantDigits: resolvedFormatterOptions.maximumSignificantDigits,
+      numberingSystem: resolvedFormatterOptions.numberingSystem,
+      signDisplay: resolvedFormatterOptions.signDisplay,
+      compactDisplay: resolvedFormatterOptions.compactDisplay,
+    };
+
     const parseContext: ParseExecutionContext = {
       originalInput: trimmed,
       style: this.options.style,
-      options: { notation: this.options.notation, style: this.options.style as any },
+      options: contextOptions,
       strict: this.options.strict,
     };
     const pluginRegistry = getPluginRegistry();
@@ -290,6 +312,8 @@ export class NumberParser {
         return this.parseCurrency(input);
       case 'per-mille':
         return this.parsePerMille(input);
+      case 'unit':
+        return this.parseDecimal(input);
       case 'decimal':
       default:
         return this.parseDecimal(input);
