@@ -42,31 +42,48 @@ const DIGIT_MAP: Record<string, number> = {
 };
 
 function chunkString(value: string, size: number): string[] {
-  const result: string[] = [];
-  for (let i = value.length; i > 0; i -= size) {
-    const start = Math.max(i - size, 0);
-    result.unshift(value.slice(start, i));
+  if (value.length <= size) {
+    return [value];
   }
+
+  const groupCount = Math.ceil(value.length / size);
+  const result = new Array<string>(groupCount);
+  let end = value.length;
+
+  for (let groupIndex = groupCount - 1; groupIndex >= 0; groupIndex -= 1) {
+    const start = Math.max(0, end - size);
+    result[groupIndex] = value.slice(start, end);
+    end = start;
+  }
+
   return result;
 }
 
 function convertFourDigitGroup(group: string): string {
-  const digits = group.padStart(4, '0').split('');
+  const padded = group.padStart(4, '0');
   let result = '';
-  let zeroCount = 0;
-  digits.forEach((digitChar, index) => {
-    const digit = Number(digitChar);
-    const unit = SMALL_UNITS[digits.length - index - 1];
+  let zeroPending = false;
+  const length = padded.length;
+
+  for (let index = 0; index < length; index += 1) {
+    const digit = padded.charCodeAt(index) - 48;
+    const unit = SMALL_UNITS[length - index - 1];
+
     if (digit === 0) {
-      zeroCount += 1;
-    } else {
-      if (zeroCount > 0 && result) {
-        result += DIGITS[0];
+      if (result && !zeroPending) {
+        zeroPending = true;
       }
-      zeroCount = 0;
-      result += `${DIGITS[digit]}${unit}`;
+      continue;
     }
-  });
+
+    if (zeroPending) {
+      result += DIGITS[0];
+      zeroPending = false;
+    }
+
+    result += unit ? `${DIGITS[digit]}${unit}` : DIGITS[digit];
+  }
+
   return result;
 }
 
@@ -74,22 +91,27 @@ function convertIntegerToChinese(intStr: string): string {
   if (!intStr || /^0+$/.test(intStr)) {
     return DIGITS[0];
   }
+
   const groups = chunkString(intStr, 4);
+  const groupCount = groups.length;
   let result = '';
   let zeroPending = false;
-  groups.forEach((group, index) => {
-    const converted = convertFourDigitGroup(group);
-    const largeUnit = LARGE_UNITS[groups.length - index - 1];
+
+  for (let index = 0; index < groupCount; index += 1) {
+    const converted = convertFourDigitGroup(groups[index]);
+    const largeUnit = LARGE_UNITS[groupCount - index - 1];
+
     if (converted) {
       if (zeroPending && result) {
         result += DIGITS[0];
       }
-      result += converted + largeUnit;
+      result += largeUnit ? `${converted}${largeUnit}` : converted;
       zeroPending = false;
-    } else {
-      zeroPending = !!result;
+    } else if (result) {
+      zeroPending = true;
     }
-  });
+  }
+
   return result || DIGITS[0];
 }
 
@@ -122,58 +144,55 @@ function toChineseUppercase(value: number): string {
   return isNegative ? `${NEGATIVE_SIGN}${formatted}` : formatted;
 }
 
-function parseFourDigitGroup(segment: string): Big {
-  if (!segment) {
-    return new Big(0);
-  }
-  let total = 0;
-  let currentDigit = -1;
-  for (let i = 0; i < segment.length; i += 1) {
-    const char = segment[i];
-    if (char === DIGITS[0]) {
-      currentDigit = 0;
-      continue;
-    }
-    if (char in DIGIT_MAP) {
-      currentDigit = DIGIT_MAP[char];
-      if (i === segment.length - 1) {
-        total += currentDigit;
-        currentDigit = -1;
-      }
-      continue;
-    }
-    if (char in SMALL_UNIT_MAP) {
-      const unitValue = SMALL_UNIT_MAP[char];
-      const digit = currentDigit > 0 ? currentDigit : 1;
-      total += digit * unitValue;
-      currentDigit = -1;
-      continue;
-    }
-    throw new Error(`无法解析的中文大写数字: ${char}`);
-  }
-  return new Big(total);
-}
-
 function parseChineseInteger(input: string): Big {
   if (!input || input === DIGITS[0]) {
     return new Big(0);
   }
-  let remaining = input;
+
   let total = new Big(0);
-  (['兆', '亿', '万'] as const).forEach((unit) => {
-    const index = remaining.indexOf(unit);
-    if (index !== -1) {
-      const before = remaining.slice(0, index);
-      const after = remaining.slice(index + 1);
-      const beforeValue = parseChineseInteger(before);
-      total = total.plus(beforeValue.times(LARGE_UNIT_MAP[unit]));
-      remaining = after;
+  let groupValue = new Big(0);
+  let currentDigit: number | null = null;
+
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index];
+
+    if (char === DIGITS[0]) {
+      currentDigit = 0;
+      continue;
     }
-  });
-  if (remaining) {
-    total = total.plus(parseFourDigitGroup(remaining));
+
+    if (char in DIGIT_MAP) {
+      currentDigit = DIGIT_MAP[char];
+      continue;
+    }
+
+    const smallUnitValue = SMALL_UNIT_MAP[char];
+    if (smallUnitValue) {
+      const digitValue = currentDigit && currentDigit > 0 ? currentDigit : 1;
+      groupValue = groupValue.plus(new Big(digitValue).times(smallUnitValue));
+      currentDigit = null;
+      continue;
+    }
+
+    const largeUnitValue = LARGE_UNIT_MAP[char];
+    if (largeUnitValue) {
+      if (currentDigit && currentDigit > 0) {
+        groupValue = groupValue.plus(currentDigit);
+      }
+      total = total.plus(groupValue.times(largeUnitValue));
+      groupValue = new Big(0);
+      currentDigit = null;
+      continue;
+    }
+
+    throw new Error(`无法解析的中文大写数字: ${char}`);
   }
-  return total;
+
+  if (currentDigit && currentDigit > 0) {
+    groupValue = groupValue.plus(currentDigit);
+  }
+
+  return total.plus(groupValue);
 }
 
 function parseChineseUppercaseToNumberString(input: string): string {
