@@ -14,6 +14,12 @@ export interface FormatterDefaults {
   percent: UseFormatOptions;
   /** 千分比默认配置 */
   perMille: UseFormatOptions;
+  /** 万分比默认配置 */
+  perMyriad: UseFormatOptions;
+  /** 百分点默认配置 */
+  percentagePoint: UseFormatOptions;
+  /** 中文大写数字默认配置 */
+  cnUpper: UseFormatOptions;
   /** 紧凑格式默认配置 */
   compact: UseFormatOptions;
   /** 科学记数法默认配置 */
@@ -41,6 +47,17 @@ const INITIAL_DEFAULTS: FormatterDefaults = {
     style: 'per-mille',
     maximumFractionDigits: 2,
   },
+  perMyriad: {
+    style: 'per-myriad',
+    maximumFractionDigits: 2,
+  },
+  percentagePoint: {
+    style: 'percentage-point',
+    maximumFractionDigits: 2,
+  },
+  cnUpper: {
+    style: 'cn-upper',
+  },
   compact: {
     style: 'decimal',
     notation: 'compact',
@@ -60,6 +77,9 @@ function cloneDefaults(): FormatterDefaults {
     currency: { ...INITIAL_DEFAULTS.currency },
     percent: { ...INITIAL_DEFAULTS.percent },
     perMille: { ...INITIAL_DEFAULTS.perMille },
+    perMyriad: { ...INITIAL_DEFAULTS.perMyriad },
+    percentagePoint: { ...INITIAL_DEFAULTS.percentagePoint },
+    cnUpper: { ...INITIAL_DEFAULTS.cnUpper },
     compact: { ...INITIAL_DEFAULTS.compact },
     scientific: { ...INITIAL_DEFAULTS.scientific },
   };
@@ -85,6 +105,9 @@ export function getDefaultConfigs(): FormatterDefaults {
     currency: { ...defaultConfigs.currency },
     percent: { ...defaultConfigs.percent },
     perMille: { ...defaultConfigs.perMille },
+    perMyriad: { ...defaultConfigs.perMyriad },
+    percentagePoint: { ...defaultConfigs.percentagePoint },
+    cnUpper: { ...defaultConfigs.cnUpper },
     compact: { ...defaultConfigs.compact },
     scientific: { ...defaultConfigs.scientific },
   };
@@ -106,7 +129,7 @@ export function updateDefaultConfig<T extends keyof FormatterDefaults>(
   };
 
   if (
-    type === 'perMille' &&
+    (type === 'perMille' || type === 'perMyriad' || type === 'percentagePoint') &&
     typeof config?.maximumFractionDigits === 'number' &&
     config.extend_fixDecimals === undefined
   ) {

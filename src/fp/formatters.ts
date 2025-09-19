@@ -143,6 +143,50 @@ export function formatAsPerMilleEx(
   return formatResultWithDefaults('perMille', value, options, { style: 'per-mille' });
 }
 
+export function formatAsPerMyriad(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): string {
+  return formatWithDefaults('perMyriad', value, options, { style: 'per-myriad' });
+}
+
+export function formatAsPerMyriadEx(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): UseFormatResult {
+  return formatResultWithDefaults('perMyriad', value, options, { style: 'per-myriad' });
+}
+
+export function formatAsPercentagePoint(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): string {
+  return formatWithDefaults('percentagePoint', value, options, { style: 'percentage-point' });
+}
+
+export function formatAsPercentagePointEx(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): UseFormatResult {
+  return formatResultWithDefaults('percentagePoint', value, options, {
+    style: 'percentage-point',
+  });
+}
+
+export function formatAsChineseUppercase(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): string {
+  return formatWithDefaults('cnUpper', value, options, { style: 'cn-upper' });
+}
+
+export function formatAsChineseUppercaseEx(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): UseFormatResult {
+  return formatResultWithDefaults('cnUpper', value, options, { style: 'cn-upper' });
+}
+
 /**
  * 使用紧凑表示法格式化数字 (例如, 1.2M)。
  * @param value 要格式化的数字。

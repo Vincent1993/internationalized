@@ -117,6 +117,24 @@ export function parsePerMille(input: string, options?: Omit<ParseOptions, 'style
   return parseWithDefaults(input, options, { style: 'per-mille' });
 }
 
+export function parsePerMyriad(input: string, options?: Omit<ParseOptions, 'style'>): ParseResult {
+  return parseWithDefaults(input, options, { style: 'per-myriad' });
+}
+
+export function parsePercentagePoint(
+  input: string,
+  options?: Omit<ParseOptions, 'style'>,
+): ParseResult {
+  return parseWithDefaults(input, options, { style: 'percentage-point' });
+}
+
+export function parseChineseUppercase(
+  input: string,
+  options?: Omit<ParseOptions, 'style'>,
+): ParseResult {
+  return parseWithDefaults(input, options, { style: 'cn-upper' });
+}
+
 /**
  * 解析紧凑格式的字符串
  * @param input 格式化后的紧凑字符串，如 "1.2M", "1.2万"
@@ -183,6 +201,14 @@ export function parseAuto(input: string, options?: ParseOptions): ParseResult {
     return parsePerMille(trimmed, options);
   }
 
+  if (trimmed.includes('‱')) {
+    return parsePerMyriad(trimmed, options);
+  }
+
+  if (/pp$/i.test(trimmed)) {
+    return parsePercentagePoint(trimmed, options);
+  }
+
   if (/[E][+-]?\d+$/i.test(trimmed)) {
     return parseScientific(trimmed, options);
   }
@@ -197,6 +223,10 @@ export function parseAuto(input: string, options?: ParseOptions): ParseResult {
   // 检测紧凑格式（包含字母单位）
   if (/\d+\.?\d*[KMGTPEZY万千百十]/i.test(trimmed)) {
     return parseCompact(trimmed, options);
+  }
+
+  if (/[零壹贰叁肆伍陆柒捌玖拾佰仟万亿兆点负]+/.test(trimmed)) {
+    return parseChineseUppercase(trimmed, options);
   }
 
   // 默认作为小数处理

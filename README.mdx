@@ -81,9 +81,28 @@ import { NumberFormat } from '@dfx/number-format';
 <NumberFormat value={0.1234} options={{ style: 'per-mille' }} />
 // 输出：123.4‰
 
+// 万分比（百分点）格式
+<NumberFormat value={0.1234} options={{ style: 'per-myriad' }} />
+// 输出：1234‱
+
+// 百分点格式
+<NumberFormat value={0.1234} options={{ style: 'percentage-point' }} />
+// 输出：12.34pp
+
+// 中文大写数字
+<NumberFormat value={1234.56} options={{ style: 'cn-upper' }} />
+// 输出：壹仟贰佰叁拾肆点伍陆
+
 // 固定小数位数
 <NumberFormat value={123.456789} options={{ style: 'decimal', extend_fixDecimals: 2 }} />
 // 输出：123.46
+
+// 动态扩展极小数值的小数位
+<NumberFormat
+  value={0.00000012}
+  options={{ style: 'decimal', extend_dynamicDecimals: { maxFractionDigits: 8, additionalDigits: 1 } }}
+/>
+// 输出：0.00000012
 ```
 
 ## 📋 功能矩阵
@@ -96,7 +115,11 @@ import { NumberFormat } from '@dfx/number-format';
 | **货币格式** | `<NumberFormat style="currency">` | `formatAsCurrency` | 多币种格式化，自动添加货币符号 |
 | **百分比格式** | `<NumberFormat style="percent">` | `formatAsPercent` | 百分比显示，自动转换数值范围 |
 | **千分比格式** | `<NumberFormat style="per-mille">` | `formatAsPerMille` | 千分比显示，使用 ‰ 符号 |
+| **万分比格式** | `<NumberFormat style="per-myriad">` | `formatAsPerMyriad` | 万分比/基点显示，使用 ‱ 符号 |
+| **百分点格式** | `<NumberFormat style="percentage-point">` | `formatAsPercentagePoint` | 百分点显示，使用 pp 后缀 |
+| **中文大写数字** | `<NumberFormat style="cn-upper">` | `formatAsChineseUppercase` | 将数字转换为中文大写 |
 | **固定小数位数** | `extend_fixDecimals` 选项 | 扩展配置 | 强制固定小数位数，覆盖用户设置 |
+| **动态小数位** | `extend_dynamicDecimals` 选项 | 扩展配置 | 为极小数值动态扩展小数位并支持科学计数法回退 |
 | **紧凑格式** | `<NumberFormat notation="compact">` | `formatAsCompact` | 大数值紧凑显示（如 1.2M） |
 | **科学记数法** | `<NumberFormat notation="scientific">` | `formatAsScientific` | 科学记数法格式（如 1.23E3） |
 | **整数格式** | - | `formatAsInteger` | 强制整数显示，自动四舍五入 |
@@ -109,6 +132,9 @@ import { NumberFormat } from '@dfx/number-format';
 | **货币解析** | `useParse` | `parseCurrency` | 解析货币格式字符串 |
 | **百分比解析** | `useParse` | `parsePercent` | 解析百分比格式字符串 |
 | **千分比解析** | `useParse` | `parsePerMille` | 解析千分比格式字符串 |
+| **万分比解析** | `useParse` | `parsePerMyriad` | 解析万分比/基点字符串 |
+| **百分点解析** | `useParse` | `parsePercentagePoint` | 解析百分点 (pp) 字符串 |
+| **中文大写数字解析** | `useParse` | `parseChineseUppercase` | 解析中文大写数字字符串 |
 | **智能解析** | `useAutoParse` | `parseAuto` | 自动检测格式并解析 |
 | **规则匹配解析** | `useAutoParse` | - | 基于规则自动选择解析方式 |
 
@@ -120,6 +146,7 @@ import { NumberFormat } from '@dfx/number-format';
 | **智能规则** | `<AutoMetricNumber>` | `rules` 属性 | 基于名称/正则自动匹配格式 |
 | **异常值处理** | 内置插件 | `registerPlugin` | 处理 null、NaN、Infinity 等 |
 | **固定小数位数** | `extend_fixDecimals` | 扩展选项 | 强制设置小数位数 |
+| **动态小数位** | `extend_dynamicDecimals` | 扩展选项 | 自动扩展小数位，支持科学计数法回退 |
 | **性能缓存** | 自动 | `clearCache` | 格式化器和解析器自动缓存 |
 | **FP 全局配置** | - | `config()` | 函数式编程风格的全局配置 |
 | **多态组件** | `as` 属性 | HTML 元素 | 渲染为不同 HTML 标签 |
@@ -132,7 +159,7 @@ import { NumberFormat } from '@dfx/number-format';
 | `UseNumberFormatResult` | 格式化结果 | `{ formattedValue, parts, sign, isNaN }` |
 | `ParseResult` | 解析结果 | `{ value, success, error, input, mathSign, isZero, isInteger, isNegative, isPositive, isNegativeZero }` |
 | `MetricFormatRule` | 规则定义 | `{ name: string, options: ... }` |
-| `ExtendedStyle` | 扩展样式 | `'decimal' \| 'currency' \| 'per-mille'` |
+| `ExtendedStyle` | 扩展样式 | `'decimal' \| 'currency' \| 'percent' \| 'per-mille' \| 'per-myriad' \| 'percentage-point' \| 'cn-upper'` |
 
 ## 🎯 使用场景对比
 
@@ -200,6 +227,9 @@ import {
 const price = formatAsCurrency(1234.56, 'USD'); // "$1,234.56"
 const percentage = formatAsPercent(0.8765, { maximumFractionDigits: 2 }); // "87.65%"
 const fixed = formatAsDecimal(123.456789, { extend_fixDecimals: 3 }); // "123.457"
+const tiny = formatAsDecimal(0.00000012, {
+  extend_dynamicDecimals: { maxFractionDigits: 8, additionalDigits: 1 },
+}); // "0.00000012"
 
 // 解析
 const currencyResult = parseCurrency("$1,234.56", "USD");
@@ -334,6 +364,7 @@ function MetricTable({ metrics }) {
 | **fallback** | 异常值处理 | 处理 null、NaN、Infinity 等异常值 |
 | **per-mille** | 千分比格式 | 支持 ‰ 符号的千分比显示 |
 | **fix-decimals** | 固定小数位数 | 强制设置小数位数，覆盖用户配置 |
+| **dynamic-decimal-precision** | 动态小数位控制 | 自动扩展极小数值的小数位并可回退到科学计数法 |
 | **validator** | 配置验证 | 验证格式化选项的有效性 |
 
 ### 固定小数位数插件
@@ -372,6 +403,40 @@ import { NumberFormat } from '@dfx/number-format';
   }}
 />
 // 输出：123.4568
+```
+
+### 动态小数位插件
+
+```tsx pure
+import { NumberFormat } from '@dfx/number-format';
+
+// 避免极小数值在表格中被舍入为 0
+<NumberFormat
+  value={0.00000042}
+  options={{
+    style: 'decimal',
+    maximumFractionDigits: 2, // 原始配置
+    extend_dynamicDecimals: {
+      maxFractionDigits: 8, // 最多探测 8 位小数
+      additionalDigits: 1,  // 在首个非零位后额外保留 1 位
+    },
+  }}
+/>;
+// 输出：0.00000042
+
+// 超过阈值后自动切换科学计数法
+<NumberFormat
+  value={3.2e-9}
+  options={{
+    style: 'decimal',
+    extend_dynamicDecimals: {
+      maxFractionDigits: 6,
+      fallbackNotation: 'scientific',
+      fallbackMaximumFractionDigits: 4,
+    },
+  }}
+/>;
+// 输出：3.2E-9
 ```
 
 ### 异常值处理插件
@@ -487,7 +552,7 @@ GitHub Actions（见 `.github/workflows/ci.yml`）会在 push 与 Pull Request �
 函数式 API 使用轻量级缓存避免重复创建 `Intl.NumberFormat`/`NumberParser` 实例。缓存键由 `src/utils/cache-key.ts` 提供的 `createCacheKey` 统一生成，会将：
 
 - `locale`、`style`、`useGrouping` 等核心参数正规化；
-- 自定义扩展选项（如 `extend_fixDecimals`、`extend_negativeZero`）一并纳入哈希计算；
+- 自定义扩展选项（如 `extend_fixDecimals`、`extend_dynamicDecimals`、`extend_negativeZero`）一并纳入哈希计算；
 - 忽略显式为 `undefined` 的字段，保证选项缺省与显式传入默认值共享同一缓存键。
 
 通过这一策略，`src/fp/memoize.ts` 可以稳定地区分不同的格式化需求，同时避免因对象引用复用或扩展字段变动导致的缓存击穿/命中错误。
@@ -514,6 +579,14 @@ interface CoreExtensionOptions {
   extend_negativeZero?: 'as-zero' | 'keep';
   /** 固定小数位数（自动设置 minimumFractionDigits 和 maximumFractionDigits 为相同值） */
   extend_fixDecimals?: number;
+  /** 动态小数位控制（探测首个非零位并可配置科学计数法回退） */
+  extend_dynamicDecimals?: {
+    enabled?: boolean;
+    maxFractionDigits?: number;
+    additionalDigits?: number;
+    fallbackNotation?: 'scientific' | 'engineering';
+    fallbackMaximumFractionDigits?: number;
+  };
 }
 
 interface AutoMetricNumberProps<T extends ElementType = 'span'> {
@@ -600,6 +673,9 @@ A: 使用 Hook 缓存格式化器，批量相同格式时复用同一个格式�
 **Q: 如何固定小数位数？**
 A: 使用 `extend_fixDecimals` 扩展选项。例如 `options={{ extend_fixDecimals: 2 }}` 会强制显示2位小数，覆盖用户的 `minimumFractionDigits` 和 `maximumFractionDigits` 设置。
 
+**Q: 极小的小数为什么会被显示为 0？**
+A: 可以启用 `extend_dynamicDecimals` 扩展选项。它会逐位探测首个非零小数并动态提升精度，必要时自动切换到科学计数法展示，避免在表格中出现全为 0 的情况。
+
 **Q: 支持哪些数字格式？**
 A: 支持所有 `Intl.NumberFormat` 格式，额外支持千分比（‰）格式。包括小数、整数、货币、百分比、紧凑格式、科学记数法等。
 
@@ -619,10 +695,10 @@ A: 使用对应的解析函数。例如 `formatAsCurrency` 对应 `parseCurrency
 - **⚡ 性能优化**: 内置缓存机制，避免重复创建格式化器，组件使用 React.memo
 - **🔧 函数式编程**: `/fp` 入口提供纯函数式格式化函数
 - **⚙️ 全局配置**: 支持为不同格式类型设置默认选项
-- **🔌 插件系统**: 4个内置插件 + 自定义插件扩展支持
+- **🔌 插件系统**: 多个内置插件（千分比、动态小数位、异常值等）+ 自定义插件扩展支持
 - **🛡️ 异常值处理**: 内置 Fallback 插件，优雅处理异常值
 - **📊 智能规则**: 支持精确匹配和正则模式的自动格式化
 - **🎨 组件化设计**: 多态组件支持，灵活的渲染方式
 - **🔄 可逆解析**: 强大的解析功能，支持格式化字符串转数字
 - **📱 响应式**: 与任何 UI 框架无缝集成
-- **🔧 扩展选项**: 支持 `extend_fixDecimals` 等高级格式化控制
+- **🔧 扩展选项**: 支持 `extend_fixDecimals`、`extend_dynamicDecimals` 等高级格式化控制

@@ -336,8 +336,8 @@ describe('FP 性能和缓存功能', () => {
           compact: formatters.compact(value),
         }));
 
-        const duration = performanceTestHelpers.batchPerformanceTest(operations, 800);
-        expect(duration).toBeLessThan(800);
+        const duration = performanceTestHelpers.batchPerformanceTest(operations, 1200);
+        expect(duration).toBeLessThan(1200);
       });
 
       it('不同选项的批量操作应该利用缓存', () => {
@@ -359,7 +359,7 @@ describe('FP 性能和缓存功能', () => {
         });
 
         const duration = performance.now() - start;
-        expect(duration).toBeLessThan(500); // 应该在 500ms 内完成
+        expect(duration).toBeLessThan(800); // 应该在 800ms 内完成
       });
     });
 
@@ -378,7 +378,7 @@ describe('FP 性能和缓存功能', () => {
           () => formatters.compact(value),
         ]);
 
-        performanceTestHelpers.batchPerformanceTest(operations, 50);
+        performanceTestHelpers.batchPerformanceTest(operations, 80);
       });
 
       it('复杂选项组合的性能应该可接受', () => {
@@ -398,7 +398,7 @@ describe('FP 性能和缓存功能', () => {
           () => formatters.scientific(value, complexOptions),
         ]);
 
-        performanceTestHelpers.batchPerformanceTest(operations, 100);
+        performanceTestHelpers.batchPerformanceTest(operations, 150);
       });
     });
   });

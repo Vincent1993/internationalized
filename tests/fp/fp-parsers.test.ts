@@ -9,6 +9,9 @@ import {
   parseCurrency,
   parsePercent,
   parsePerMille,
+  parsePerMyriad,
+  parsePercentagePoint,
+  parseChineseUppercase,
   parseCompact,
   parseScientific,
   parseAuto,
@@ -127,6 +130,48 @@ describe('FP 解析函数', () => {
     });
   });
 
+  describe('parsePerMyriad', () => {
+    it('应该解析万分比格式', () => {
+      const result = parsePerMyriad('123.4‱');
+      expect(result.value).toBeCloseTo(0.01234);
+      expect(result.success).toBe(true);
+    });
+
+    it('应该在严格模式下要求万分符', () => {
+      const result = parsePerMyriad('123.4', { strict: true });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Per-myriad symbol');
+    });
+  });
+
+  describe('parsePercentagePoint', () => {
+    it('应该解析百分点格式', () => {
+      const result = parsePercentagePoint('12.3pp');
+      expect(result.value).toBeCloseTo(0.123);
+      expect(result.success).toBe(true);
+    });
+
+    it('应该在严格模式下要求 pp 后缀', () => {
+      const result = parsePercentagePoint('12.3', { strict: true });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Percentage point suffix');
+    });
+  });
+
+  describe('parseChineseUppercase', () => {
+    it('应该解析中文大写数字', () => {
+      const result = parseChineseUppercase('壹仟贰佰叁拾肆点伍陆');
+      expect(result.value).toBeCloseTo(1234.56);
+      expect(result.success).toBe(true);
+    });
+
+    it('应该解析负数中文大写数字', () => {
+      const result = parseChineseUppercase('负叁拾贰');
+      expect(result.value).toBe(-32);
+      expect(result.success).toBe(true);
+    });
+  });
+
   describe('parseCompact', () => {
     it('应该解析英文紧凑格式', () => {
       expect(parseCompact('1.2M').value).toBe(1200000);
@@ -183,6 +228,24 @@ describe('FP 解析函数', () => {
     it('应该自动识别千分比', () => {
       const result = parseAuto('123‰');
       expect(result.value).toBeCloseTo(0.123);
+      expect(result.success).toBe(true);
+    });
+
+    it('应该自动识别万分比', () => {
+      const result = parseAuto('123‱');
+      expect(result.value).toBeCloseTo(0.0123);
+      expect(result.success).toBe(true);
+    });
+
+    it('应该自动识别百分点', () => {
+      const result = parseAuto('12pp');
+      expect(result.value).toBeCloseTo(0.12);
+      expect(result.success).toBe(true);
+    });
+
+    it('应该自动识别中文大写数字', () => {
+      const result = parseAuto('壹佰贰拾叁');
+      expect(result.value).toBe(123);
       expect(result.success).toBe(true);
     });
 

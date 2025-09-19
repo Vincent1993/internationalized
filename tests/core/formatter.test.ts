@@ -65,6 +65,20 @@ describe('核心格式化器 (formatter)', () => {
       // Intl.ResolvedNumberFormatOptions 中 style 会是 decimal
       expect(options.style).toBe('decimal');
     });
+
+    it('应支持新的插件扩展样式', () => {
+      const perMyriad = resolveFormatOptions({ style: 'per-myriad' });
+      expect(perMyriad.originalStyle).toBe('per-myriad');
+      expect(perMyriad.style).toBe('decimal');
+
+      const percentagePoint = resolveFormatOptions({ style: 'percentage-point' });
+      expect(percentagePoint.originalStyle).toBe('percentage-point');
+      expect(percentagePoint.style).toBe('decimal');
+
+      const chineseUpper = resolveFormatOptions({ style: 'cn-upper' });
+      expect(chineseUpper.originalStyle).toBe('cn-upper');
+      expect(chineseUpper.style).toBe('decimal');
+    });
   });
 
   describe('createFormatterCore', () => {

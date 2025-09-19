@@ -19,8 +19,13 @@ export {
 
 // ==================== 内置插件 ====================
 export { perMillePluginGroup } from './per-mille';
+export { perMyriadPluginGroup } from './per-myriad';
+export { percentagePointPluginGroup } from './percentage-point';
+export { chineseUppercasePluginGroup } from './chinese-uppercase';
+export { toChineseUppercase } from './chinese-uppercase';
 export { fallbackPlugin, createFallbackPlugin } from './fallback';
 export { fixDecimalsPlugin } from './fix-decimals';
+export { dynamicDecimalPrecisionPlugin } from './dynamic-decimals';
 
 // ==================== 类型定义 ====================
 export type {
@@ -33,6 +38,7 @@ export type {
   ExtendedStyle,
   BaseFormatter,
   InputValueState,
+  DynamicDecimalControlOptions,
 } from './types';
 
 export type {

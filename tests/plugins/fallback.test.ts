@@ -6,11 +6,20 @@
 import { createNumberFormat } from '../../src/core/formatter';
 import { resetPlugins } from '../../src/plugins/registry';
 import { perMillePluginGroup } from '../../src/plugins/per-mille';
+import { perMyriadPluginGroup } from '../../src/plugins/per-myriad';
+import { percentagePointPluginGroup } from '../../src/plugins/percentage-point';
+import { chineseUppercasePluginGroup } from '../../src/plugins/chinese-uppercase';
 import { fallbackPlugin, createFallbackPlugin } from '../../src/plugins/fallback';
 
 // 辅助函数：重置为默认插件
 const setupDefaultPlugins = () => {
-  resetPlugins([perMillePluginGroup, fallbackPlugin]);
+  resetPlugins([
+    perMillePluginGroup,
+    perMyriadPluginGroup,
+    percentagePointPluginGroup,
+    chineseUppercasePluginGroup,
+    fallbackPlugin,
+  ]);
 };
 
 describe('Fallback 插件集成测试', () => {
@@ -60,6 +69,9 @@ describe('Fallback 插件集成测试', () => {
 
       // 千分比
       { style: 'per-mille', options: {}, value: null, expected: '--‰' },
+      { style: 'per-myriad', options: {}, value: null, expected: '--‱' },
+      { style: 'percentage-point', options: {}, value: null, expected: '--pp' },
+      { style: 'cn-upper', options: {}, value: null, expected: 'N/A' },
 
       // 单位
       {

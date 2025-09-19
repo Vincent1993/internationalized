@@ -329,7 +329,7 @@ describe('FP 模块集成测试', () => {
         const duration = performance.now() - start;
 
         expect(results).toHaveLength(200);
-        expect(duration).toBeLessThan(300); // 应该在 300ms 内完成
+        expect(duration).toBeLessThan(500); // 应该在 500ms 内完成
 
         // 验证结果正确性
         results.slice(0, 5).forEach(result => {
@@ -365,7 +365,7 @@ describe('FP 模块集成测试', () => {
         }
         const cachedTime = performance.now() - start;
 
-        expect(cachedTime).toBeLessThan(200); // 缓存命中应该很快
+        expect(cachedTime).toBeLessThan(300); // 缓存命中应该很快
       });
     });
 

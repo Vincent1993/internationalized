@@ -3,6 +3,11 @@
  */
 
 import type { ExtendedStyle, ContextAwareFallbackConfig, FallbackStrategy } from './types';
+import {
+  STYLE_PER_MILLE,
+  STYLE_PER_MYRIAD,
+  STYLE_PERCENTAGE_POINT,
+} from '../shared/constants';
 
 /**
  * 为不同的格式化样式（`style`）提供默认的回退策略。
@@ -29,13 +34,40 @@ export const DEFAULT_FALLBACK_STRATEGIES: Record<NonNullable<ExtendedStyle>, Fal
     preserveFormatting: true,
   },
   /** 千分比格式：在回退文本中包含 '‰' */
-  'per-mille': {
+  [STYLE_PER_MILLE]: {
     onNull: '--',
     onUndefined: '--',
     onNaN: '--',
     onInfinity: '--',
     onNegativeInfinity: '--',
     preserveFormatting: true,
+  },
+  /** 万分比格式：在回退文本中包含 '‱' */
+  [STYLE_PER_MYRIAD]: {
+    onNull: '--',
+    onUndefined: '--',
+    onNaN: '--',
+    onInfinity: '--',
+    onNegativeInfinity: '--',
+    preserveFormatting: true,
+  },
+  /** 百分点格式：在回退文本中包含 'pp' */
+  [STYLE_PERCENTAGE_POINT]: {
+    onNull: '--',
+    onUndefined: '--',
+    onNaN: '--',
+    onInfinity: '--',
+    onNegativeInfinity: '--',
+    preserveFormatting: true,
+  },
+  /** 中文大写数字格式 */
+  'cn-upper': {
+    onNull: 'N/A',
+    onUndefined: 'N/A',
+    onNaN: 'N/A',
+    onInfinity: '∞',
+    onNegativeInfinity: '-∞',
+    preserveFormatting: false,
   },
   /** 普通小数格式：使用简单的符号 */
   decimal: {
