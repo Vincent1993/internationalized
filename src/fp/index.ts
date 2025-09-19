@@ -49,5 +49,23 @@ export { clearAllFPCaches, clearCache, clearFormatterCache, clearParserCache } f
 // 配置管理
 export { config, resetDefaultConfigs, type FormatterDefaults } from './defaults';
 
+// 模板格式化
+export {
+  formatWithTemplate,
+  resolveTemplateOptions,
+  configureFormatTemplate,
+  registerTemplateHandler,
+  unregisterTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
+  resetFormatTemplateConfig,
+  setTemplateTypeDefaults,
+  type FormatTemplateResolution,
+  type TemplateHandler,
+  type TemplatePluginHandler,
+  type TemplatePluginRegistration,
+  type FormatTemplateConfig,
+} from './template';
+
 // 核心类型
 export type { ParseResult, ParseOptions } from '../core/parser';

@@ -14,7 +14,18 @@ export { useFormat, useAutoFormat, useParse } from './hooks';
 export type { UseAutoFormatOptions, UseParseOptions, UseParseResult } from './hooks';
 
 // ==================== 核心 API ====================
-export { createNumberFormat, resolveFormatOptions } from './core';
+export {
+  createNumberFormat,
+  resolveFormatOptions,
+  resolveFormatTemplate,
+  configureFormatTemplate,
+  registerTemplateHandler,
+  unregisterTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
+  resetFormatTemplateConfig,
+  setTemplateTypeDefaults,
+} from './core';
 export { createNumberParser, parseNumber } from './core/parser';
 
 export type {
@@ -25,6 +36,8 @@ export type {
   CreateNumberFormatOptions,
   NumberFormatter,
   ResolvedFormatOptions,
+  TemplatePluginHandler,
+  TemplatePluginRegistration,
 } from './core';
 
 export type { ParseResult, ParseOptions, NumberParser } from './core/parser';
