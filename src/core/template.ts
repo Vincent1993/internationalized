@@ -1,5 +1,7 @@
 import { formatSpecifier, type FormatSpecifier } from 'd3-format';
 import type { UseFormatOptions } from './types';
+import type { TemplatePluginHandler, TemplateHandler } from './template-types';
+import { builtinTemplateIntegrations } from '../plugins/template-integrations';
 
 type RuntimeFormatSpecifier = FormatSpecifier & {
   precision?: number;
@@ -40,8 +42,6 @@ export interface TemplateConfigSnapshot {
   readonly registeredTypes: string[];
 }
 
-export type TemplateHandler = (specifier: FormatSpecifier, type: string) => UseFormatOptions;
-
 interface InternalTemplateConfig {
   defaults: UseFormatOptions;
   defaultCurrency?: string;
@@ -49,7 +49,23 @@ interface InternalTemplateConfig {
   typeHandlers: Map<string, TemplateHandler>;
 }
 
+interface PluginTemplateState {
+  readonly definitions: readonly TemplatePluginHandler[];
+  readonly handlers: readonly {
+    readonly type: string;
+    readonly previous?: TemplateHandler;
+    readonly existed: boolean;
+  }[];
+  readonly defaults: readonly {
+    readonly type: string;
+    readonly previous?: UseFormatOptions;
+    readonly existed: boolean;
+  }[];
+}
+
 const DEFAULT_TEMPLATE_TYPE = 'g';
+
+const pluginTemplateStates = new Map<string, PluginTemplateState>();
 
 function cloneOptions(options: UseFormatOptions | undefined): UseFormatOptions {
   if (!options) {
@@ -180,20 +196,6 @@ function createPercentRoundedHandler(): TemplateHandler {
   };
 }
 
-function createPerMilleHandler(): TemplateHandler {
-  return (specifier) => {
-    const runtime = specifier as RuntimeFormatSpecifier;
-    const precision = readPrecision(runtime);
-    const trim = isTrimEnabled(runtime);
-
-    let options: UseFormatOptions = { style: 'per-mille' };
-    if (precision !== undefined) {
-      options = applyFractionDigits(options, precision, trim);
-    }
-    return options;
-  };
-}
-
 function createScientificHandler(): TemplateHandler {
   return (specifier) => {
     const runtime = specifier as RuntimeFormatSpecifier;
@@ -248,7 +250,6 @@ function createDefaultHandlers(): Map<string, TemplateHandler> {
   handlers.set('d', createIntegerHandler());
   handlers.set('%', createPercentHandler());
   handlers.set('p', createPercentRoundedHandler());
-  handlers.set('P', createPerMilleHandler());
   handlers.set('e', createScientificHandler());
   handlers.set('E', createScientificHandler());
   handlers.set('s', createCompactHandler());
@@ -271,6 +272,98 @@ const INITIAL_CONFIG: InternalTemplateConfig = {
 };
 
 let templateConfig: InternalTemplateConfig = cloneConfig(INITIAL_CONFIG);
+
+function normalizePluginHandlers(
+  handlers: readonly TemplatePluginHandler[],
+): TemplatePluginHandler[] {
+  return handlers.map(({ type, handler, defaults }) => ({
+    type,
+    handler,
+    defaults: defaults ? cloneOptions(defaults) : defaults,
+  }));
+}
+
+function applyPluginTemplateHandlers(
+  handlers: readonly TemplatePluginHandler[],
+): PluginTemplateState {
+  const handlerSnapshots = handlers.map(({ type, handler }) => {
+    const existed = templateConfig.typeHandlers.has(type);
+    const previous = existed ? templateConfig.typeHandlers.get(type) : undefined;
+    templateConfig.typeHandlers.set(type, handler);
+    return { type, previous, existed };
+  });
+
+  const defaultSnapshots = handlers
+    .filter(({ defaults }) => defaults !== undefined)
+    .map(({ type, defaults }) => {
+      const existed = templateConfig.typeDefaults.has(type);
+      const previous = existed ? cloneOptions(templateConfig.typeDefaults.get(type)) : undefined;
+
+      if (defaults === null) {
+        templateConfig.typeDefaults.delete(type);
+      } else {
+        templateConfig.typeDefaults.set(type, cloneOptions(defaults));
+      }
+
+      return { type, previous, existed };
+    });
+
+  return { definitions: handlers, handlers: handlerSnapshots, defaults: defaultSnapshots };
+}
+
+export function registerPluginTemplateHandlers(
+  plugin: string,
+  handlers: readonly TemplatePluginHandler[],
+): void {
+  if (!plugin) {
+    throw new Error('Plugin name must be a non-empty string.');
+  }
+
+  if (pluginTemplateStates.has(plugin)) {
+    unregisterPluginTemplateHandlers(plugin);
+  }
+
+  if (!handlers || handlers.length === 0) {
+    return;
+  }
+
+  const normalized = normalizePluginHandlers(handlers);
+  const state = applyPluginTemplateHandlers(normalized);
+  pluginTemplateStates.set(plugin, { ...state, definitions: normalized });
+}
+
+export function unregisterPluginTemplateHandlers(plugin: string): void {
+  const state = pluginTemplateStates.get(plugin);
+  if (!state) {
+    return;
+  }
+
+  state.handlers.forEach(({ type, previous, existed }) => {
+    if (existed) {
+      if (previous) {
+        templateConfig.typeHandlers.set(type, previous);
+      } else {
+        templateConfig.typeHandlers.delete(type);
+      }
+    } else {
+      templateConfig.typeHandlers.delete(type);
+    }
+  });
+
+  state.defaults.forEach(({ type, previous, existed }) => {
+    if (existed) {
+      if (previous) {
+        templateConfig.typeDefaults.set(type, cloneOptions(previous));
+      } else {
+        templateConfig.typeDefaults.delete(type);
+      }
+    } else {
+      templateConfig.typeDefaults.delete(type);
+    }
+  });
+
+  pluginTemplateStates.delete(plugin);
+}
 
 function getHandlerForType(type: string): TemplateHandler | undefined {
   const direct = templateConfig.typeHandlers.get(type);
@@ -496,6 +589,26 @@ export function setTemplateTypeDefaults(type: string, defaults: UseFormatOptions
 }
 
 export function resetFormatTemplateConfig(): void {
+  const existingIntegrations = Array.from(pluginTemplateStates.entries()).map(([plugin, state]) => ({
+    plugin,
+    handlers: state.definitions,
+  }));
+
+  pluginTemplateStates.clear();
   templateConfig = cloneConfig(INITIAL_CONFIG);
+
+  existingIntegrations.forEach(({ plugin, handlers }) => {
+    registerPluginTemplateHandlers(plugin, handlers);
+  });
 }
+
+function registerBuiltinTemplateIntegrations(): void {
+  builtinTemplateIntegrations.forEach(({ plugin, handlers }) => {
+    registerPluginTemplateHandlers(plugin, handlers);
+  });
+}
+
+registerBuiltinTemplateIntegrations();
+
+export type { TemplateHandler, TemplatePluginHandler, TemplatePluginRegistration } from './template-types';
 

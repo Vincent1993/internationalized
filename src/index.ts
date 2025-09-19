@@ -22,6 +22,8 @@ export {
   getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
   resetFormatTemplateConfig,
   setTemplateTypeDefaults,
 } from './core';
@@ -35,6 +37,8 @@ export type {
   CreateNumberFormatOptions,
   NumberFormatter,
   ResolvedFormatOptions,
+  TemplatePluginHandler,
+  TemplatePluginRegistration,
 } from './core';
 
 export type { ParseResult, ParseOptions, NumberParser } from './core/parser';

@@ -6,6 +6,8 @@ import {
   configureFormatTemplate,
   getFormatTemplateConfig,
   registerTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
   resetFormatTemplateConfig,
 } from '../../src/fp';
 
@@ -30,6 +32,29 @@ describe('FP 模板格式化能力', () => {
   it('应该自动支持内置插件样式（per-mille）', () => {
     const formatted = formatWithTemplate('0.1P', 0.456, { locale: 'en-US' });
     expect(formatted).toBe('456.0‰');
+  });
+
+  it('重置配置后仍应保留插件模板处理器', () => {
+    resetFormatTemplateConfig();
+    const formatted = formatWithTemplate('0.2P', 0.123, { locale: 'en-US' });
+    expect(formatted).toBe('123.00‰');
+  });
+
+  it('应该支持通过插件注册模板处理器并且可以注销', () => {
+    registerPluginTemplateHandlers('test-plugin', [
+      {
+        type: 'X',
+        handler: () => ({ style: 'per-mille', extend_fixDecimals: 1 }),
+        defaults: { useGrouping: true },
+      },
+    ]);
+
+    const formatted = formatWithTemplate('X', 0.12, { locale: 'en-US' });
+    expect(formatted).toBe('120.0‰');
+
+    unregisterPluginTemplateHandlers('test-plugin');
+    const { options } = resolveTemplateOptions('X', { locale: 'en-US' });
+    expect(options.style).toBe('decimal');
   });
 
   it('应该解析模板并返回核心可消费的选项', () => {

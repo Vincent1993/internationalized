@@ -4,12 +4,16 @@ import {
   getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
   resetFormatTemplateConfig,
   resolveFormatTemplate,
   setTemplateTypeDefaults,
   type FormatTemplateResolution,
   type TemplateConfigSnapshot,
   type TemplateHandler,
+  type TemplatePluginHandler,
+  type TemplatePluginRegistration,
   type FormatTemplateConfig,
 } from '../core/template';
 import { getMemoizedFormatter } from './memoize';
@@ -18,6 +22,8 @@ export type {
   FormatTemplateResolution,
   TemplateConfigSnapshot,
   TemplateHandler,
+  TemplatePluginHandler,
+  TemplatePluginRegistration,
   FormatTemplateConfig,
 };
 
@@ -26,6 +32,8 @@ export {
   getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
   resetFormatTemplateConfig,
   setTemplateTypeDefaults,
 };

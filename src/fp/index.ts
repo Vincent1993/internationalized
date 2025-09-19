@@ -49,11 +49,15 @@ export {
   getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
+  registerPluginTemplateHandlers,
+  unregisterPluginTemplateHandlers,
   resetFormatTemplateConfig,
   setTemplateTypeDefaults,
   type FormatTemplateResolution,
   type TemplateConfigSnapshot,
   type TemplateHandler,
+  type TemplatePluginHandler,
+  type TemplatePluginRegistration,
   type FormatTemplateConfig,
 } from './template';
 
