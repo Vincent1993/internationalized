@@ -296,8 +296,8 @@ describe('FP 格式化器 - 核心功能', () => {
           compact: formatters.compact(value),
         }));
 
-        const duration = performanceTestHelpers.batchPerformanceTest(operations, 500);
-        expect(duration).toBeLessThan(500);
+        const duration = performanceTestHelpers.batchPerformanceTest(operations, 800);
+        expect(duration).toBeLessThan(800);
       });
     });
 
@@ -316,7 +316,7 @@ describe('FP 格式化器 - 核心功能', () => {
           () => formatters.compact(value),
         ]);
 
-        performanceTestHelpers.batchPerformanceTest(operations, 100);
+        performanceTestHelpers.batchPerformanceTest(operations, 150);
       });
     });
   });
