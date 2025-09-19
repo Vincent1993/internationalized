@@ -19,7 +19,6 @@ export {
   resolveFormatOptions,
   resolveFormatTemplate,
   configureFormatTemplate,
-  getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
   registerPluginTemplateHandlers,

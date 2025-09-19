@@ -1,7 +1,6 @@
-import type { UseFormatOptions, UseFormatResult } from '../core/types';
+import type { UseFormatOptions } from '../core/types';
 import {
   configureFormatTemplate,
-  getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
   registerPluginTemplateHandlers,
@@ -10,7 +9,6 @@ import {
   resolveFormatTemplate,
   setTemplateTypeDefaults,
   type FormatTemplateResolution,
-  type TemplateConfigSnapshot,
   type TemplateHandler,
   type TemplatePluginHandler,
   type TemplatePluginRegistration,
@@ -20,7 +18,6 @@ import { getMemoizedFormatter } from './memoize';
 
 export type {
   FormatTemplateResolution,
-  TemplateConfigSnapshot,
   TemplateHandler,
   TemplatePluginHandler,
   TemplatePluginRegistration,
@@ -29,7 +26,6 @@ export type {
 
 export {
   configureFormatTemplate,
-  getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
   registerPluginTemplateHandlers,
@@ -53,15 +49,5 @@ export function formatWithTemplate(
   const { options } = resolveFormatTemplate(template, overrides);
   const formatter = getMemoizedFormatter(options);
   return formatter.format(value).formattedValue;
-}
-
-export function formatWithTemplateEx(
-  template: string,
-  value: unknown,
-  overrides?: UseFormatOptions,
-): UseFormatResult {
-  const { options } = resolveFormatTemplate(template, overrides);
-  const formatter = getMemoizedFormatter(options);
-  return formatter.format(value);
 }
 

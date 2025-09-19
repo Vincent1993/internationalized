@@ -1,10 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   formatWithTemplate,
-  formatWithTemplateEx,
   resolveTemplateOptions,
   configureFormatTemplate,
-  getFormatTemplateConfig,
   registerTemplateHandler,
   registerPluginTemplateHandlers,
   unregisterPluginTemplateHandlers,
@@ -21,12 +19,11 @@ describe('FP 模板格式化能力', () => {
     expect(result).toBe('+12.35');
   });
 
-  it('应该返回完整的格式化结果用于后续处理', () => {
-    const result = formatWithTemplateEx('0.1%', 0.1234, { locale: 'en-US' });
+  it('应该允许通过模板解析结果获取完整配置', () => {
+    const resolution = resolveTemplateOptions('0.1%', { locale: 'en-US' });
 
-    expect(result.formattedValue).toBe('12.3%');
-    expect(result.resolvedOptions.style).toBe('percent');
-    expect(result.resolvedOptions.maximumFractionDigits).toBe(1);
+    expect(resolution.options.style).toBe('percent');
+    expect(resolution.options.maximumFractionDigits).toBe(1);
   });
 
   it('应该自动支持内置插件样式（per-mille）', () => {
@@ -75,7 +72,8 @@ describe('FP 模板格式化能力', () => {
 
     const { options } = resolveTemplateOptions('$.0f');
     expect(options.currency).toBe('CNY');
-    expect(getFormatTemplateConfig().defaultCurrency).toBe('CNY');
+    const { options: fallbackOptions } = resolveTemplateOptions('$.0f');
+    expect(fallbackOptions.currency).toBe('CNY');
   });
 
   it('应该允许注册自定义模板处理器以支持插件样式', () => {

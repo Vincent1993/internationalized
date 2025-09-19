@@ -43,10 +43,8 @@ export { config, resetDefaultConfigs, type FormatterDefaults } from './defaults'
 // 模板格式化
 export {
   formatWithTemplate,
-  formatWithTemplateEx,
   resolveTemplateOptions,
   configureFormatTemplate,
-  getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
   registerPluginTemplateHandlers,
@@ -54,7 +52,6 @@ export {
   resetFormatTemplateConfig,
   setTemplateTypeDefaults,
   type FormatTemplateResolution,
-  type TemplateConfigSnapshot,
   type TemplateHandler,
   type TemplatePluginHandler,
   type TemplatePluginRegistration,

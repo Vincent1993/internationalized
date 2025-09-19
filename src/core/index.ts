@@ -8,7 +8,6 @@ export { createNumberFormat, resolveFormatOptions } from './formatter';
 export {
   resolveFormatTemplate,
   configureFormatTemplate,
-  getFormatTemplateConfig,
   registerTemplateHandler,
   unregisterTemplateHandler,
   registerPluginTemplateHandlers,
@@ -16,7 +15,6 @@ export {
   resetFormatTemplateConfig,
   setTemplateTypeDefaults,
   type FormatTemplateResolution,
-  type TemplateConfigSnapshot,
   type TemplateHandler,
   type TemplatePluginHandler,
   type TemplatePluginRegistration,

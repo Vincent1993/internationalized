@@ -1,46 +1,40 @@
 import { formatSpecifier, type FormatSpecifier } from 'd3-format';
 import type { UseFormatOptions } from './types';
-import type { TemplatePluginHandler, TemplateHandler } from './template-types';
+import type { TemplateHandler, TemplatePluginHandler, TemplatePluginRegistration } from './template-types';
+export type { TemplateHandler, TemplatePluginHandler, TemplatePluginRegistration } from './template-types';
 import { builtinTemplateIntegrations } from '../plugins/template-integrations';
 
-type RuntimeFormatSpecifier = FormatSpecifier & {
+interface RuntimeFormatSpecifier extends FormatSpecifier {
   precision?: number;
-  width?: number;
+  trim?: boolean;
   comma?: boolean;
   zero?: boolean;
-  trim?: boolean;
-};
+  width?: number;
+  sign?: string;
+  symbol?: string;
+}
 
 export interface FormatTemplateResolution {
-  /** 原始的 D3 模板解析结果 */
+  /** D3 模板解析结果，便于外部调试与复用 */
   readonly specifier: FormatSpecifier;
   /** 模板类型（例如 f、% 等） */
   readonly type: string;
-  /** 根据模板和配置解析得到的格式化选项 */
+  /** 结合模板、配置和覆盖项生成的最终格式化配置 */
   readonly options: UseFormatOptions;
 }
 
 export interface FormatTemplateConfig {
-  /** 全局默认配置，优先级最低 */
+  /** 全局默认选项，优先级最低 */
   defaults?: UseFormatOptions;
-  /** 货币模板的默认货币代码 */
+  /** 指定默认货币，供货币模板在未设置 currency 时兜底 */
   defaultCurrency?: string;
-  /** 针对特定类型的默认配置 */
+  /** 按类型设置默认选项，null 表示清除该类型默认值 */
   typeDefaults?: Record<string, UseFormatOptions | null>;
-  /** 注册或覆盖特定类型的解析处理器 */
+  /** 直接覆写模板处理器（较少使用，仅供特殊场景） */
   typeHandlers?: Record<string, TemplateHandler>;
 }
 
-export interface TemplateConfigSnapshot {
-  /** 当前的全局默认配置 */
-  readonly defaults: UseFormatOptions;
-  /** 默认货币代码 */
-  readonly defaultCurrency?: string;
-  /** 每个类型的默认配置（浅拷贝） */
-  readonly typeDefaults: Record<string, UseFormatOptions>;
-  /** 已注册的类型处理器列表 */
-  readonly registeredTypes: string[];
-}
+const DEFAULT_TEMPLATE_TYPE = 'g';
 
 interface InternalTemplateConfig {
   defaults: UseFormatOptions;
@@ -49,40 +43,59 @@ interface InternalTemplateConfig {
   typeHandlers: Map<string, TemplateHandler>;
 }
 
-interface PluginTemplateState {
-  readonly definitions: readonly TemplatePluginHandler[];
-  readonly handlers: readonly {
+interface PluginRecord {
+  handlers: {
     readonly type: string;
     readonly previous?: TemplateHandler;
     readonly existed: boolean;
   }[];
-  readonly defaults: readonly {
+  defaults: {
     readonly type: string;
     readonly previous?: UseFormatOptions;
     readonly existed: boolean;
   }[];
 }
 
-const DEFAULT_TEMPLATE_TYPE = 'g';
+const BASE_TYPE_HANDLERS: Record<string, TemplateHandler> = {
+  // 固定小数场景：f/F，默认使用 fraction digits
+  f: createFixedHandler('decimal'),
+  F: createFixedHandler('decimal'),
+  // 百分比：% 和 p
+  '%': createFixedHandler('percent'),
+  p: createFixedHandler('percent'),
+  // 指数形式：e/E
+  e: createScientificHandler(),
+  E: createScientificHandler(),
+  // 通用形式：g/G/r/R，优先使用有效数字
+  g: createGenericHandler(),
+  G: createGenericHandler(),
+  r: createGenericHandler(),
+  R: createGenericHandler(),
+  // 整数：d/i
+  d: createIntegerHandler(),
+  i: createIntegerHandler(),
+};
 
-const pluginTemplateStates = new Map<string, PluginTemplateState>();
+let templateConfig: InternalTemplateConfig = createEmptyConfig();
 
-function cloneOptions(options: UseFormatOptions | undefined): UseFormatOptions {
-  if (!options) {
-    return {};
-  }
-  return { ...options };
+// 记录插件注册前的状态，便于在卸载时回滚
+const pluginStates = new Map<string, PluginRecord>();
+// 手动注册的处理器优先级最高
+const manualHandlers = new Map<string, TemplateHandler>();
+// 缓存模板解析结果，避免重复 formatSpecifier 计算
+const templateSpecifierCache = new Map<string, { specifier: FormatSpecifier; type: string }>();
+
+function createEmptyConfig(): InternalTemplateConfig {
+  return {
+    defaults: {},
+    defaultCurrency: undefined,
+    typeDefaults: new Map(),
+    typeHandlers: new Map(),
+  };
 }
 
-function cloneConfig(config: InternalTemplateConfig): InternalTemplateConfig {
-  return {
-    defaults: cloneOptions(config.defaults),
-    defaultCurrency: config.defaultCurrency,
-    typeDefaults: new Map(
-      Array.from(config.typeDefaults.entries()).map(([key, value]) => [key, cloneOptions(value)]),
-    ),
-    typeHandlers: new Map(config.typeHandlers.entries()),
-  };
+function cloneOptions(options: UseFormatOptions | undefined): UseFormatOptions {
+  return options ? { ...options } : {};
 }
 
 function readPrecision(spec: RuntimeFormatSpecifier): number | undefined {
@@ -90,7 +103,7 @@ function readPrecision(spec: RuntimeFormatSpecifier): number | undefined {
   if (typeof precision === 'number' && Number.isFinite(precision)) {
     return precision;
   }
-  if (precision === undefined) {
+  if (precision == null) {
     return undefined;
   }
   const parsed = Number(precision);
@@ -101,11 +114,7 @@ function isTrimEnabled(spec: RuntimeFormatSpecifier): boolean {
   return !!spec.trim;
 }
 
-function applyFractionDigits(
-  base: UseFormatOptions,
-  digits: number,
-  trim: boolean,
-): UseFormatOptions {
+function applyFractionDigits(base: UseFormatOptions, digits: number, trim: boolean): UseFormatOptions {
   const safeDigits = Math.max(0, Math.floor(digits));
   const next = { ...base } as UseFormatOptions;
 
@@ -125,11 +134,7 @@ function applyFractionDigits(
   return next;
 }
 
-function applySignificantDigits(
-  base: UseFormatOptions,
-  digits: number,
-  trim: boolean,
-): UseFormatOptions {
+function applySignificantDigits(base: UseFormatOptions, digits: number, trim: boolean): UseFormatOptions {
   const safeDigits = Math.max(1, Math.floor(digits));
   const next = { ...base } as UseFormatOptions;
 
@@ -162,453 +167,349 @@ function createFixedHandler(style: UseFormatOptions['style']): TemplateHandler {
   };
 }
 
-function createIntegerHandler(): TemplateHandler {
-  return () => ({
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-    extend_fixDecimals: 0,
-  });
-}
-
-function createPercentHandler(): TemplateHandler {
-  return (specifier) => {
-    const runtime = specifier as RuntimeFormatSpecifier;
-    const precision = readPrecision(runtime);
-    const trim = isTrimEnabled(runtime);
-
-    let options: UseFormatOptions = { style: 'percent' };
-    if (precision !== undefined) {
-      options = applyFractionDigits(options, precision, trim);
-    }
-    return options;
-  };
-}
-
-function createPercentRoundedHandler(): TemplateHandler {
-  return (specifier, type) => {
-    const runtime = specifier as RuntimeFormatSpecifier;
-    const precision = readPrecision(runtime);
-    const trim = isTrimEnabled(runtime);
-    const defaultPrecision = precision ?? (type === 'p' ? 6 : 6);
-
-    return applySignificantDigits({ style: 'percent' }, defaultPrecision, trim);
-  };
-}
-
 function createScientificHandler(): TemplateHandler {
   return (specifier) => {
     const runtime = specifier as RuntimeFormatSpecifier;
-    const precision = readPrecision(runtime) ?? 6;
-    const trim = isTrimEnabled(runtime);
-
-    return applyFractionDigits({ style: 'decimal', notation: 'scientific' }, precision, trim);
-  };
-}
-
-function createCompactHandler(): TemplateHandler {
-  return (specifier) => {
-    const runtime = specifier as RuntimeFormatSpecifier;
-    const precision = readPrecision(runtime) ?? 3;
-    const trim = isTrimEnabled(runtime);
-
-    return applySignificantDigits(
-      { style: 'decimal', notation: 'compact', compactDisplay: 'short' },
-      precision,
-      trim,
-    );
-  };
-}
-
-function createGeneralHandler(defaultPrecision: number): TemplateHandler {
-  return (specifier, type) => {
-    const runtime = specifier as RuntimeFormatSpecifier;
     const precision = readPrecision(runtime);
     const trim = isTrimEnabled(runtime);
 
-    const fallbackPrecision = precision ?? (type === '' ? 12 : defaultPrecision);
-    return applySignificantDigits({ style: 'decimal' }, fallbackPrecision, trim);
-  };
-}
-
-function createRoundedDecimalHandler(): TemplateHandler {
-  return (specifier, type) => {
-    const runtime = specifier as RuntimeFormatSpecifier;
-    const precision = readPrecision(runtime);
-    const trim = isTrimEnabled(runtime);
-    const fallbackPrecision = precision ?? (type === '' ? 12 : 6);
-
-    const options = applySignificantDigits({ style: 'decimal', notation: 'standard' }, fallbackPrecision, trim);
+    let options: UseFormatOptions = { style: 'decimal', notation: 'scientific' };
+    if (precision !== undefined) {
+      options = applySignificantDigits(options, precision + 1, trim);
+    }
     return options;
   };
 }
 
-function createDefaultHandlers(): Map<string, TemplateHandler> {
-  const handlers = new Map<string, TemplateHandler>();
-  handlers.set('f', createFixedHandler('decimal'));
-  handlers.set('F', createFixedHandler('decimal'));
-  handlers.set('d', createIntegerHandler());
-  handlers.set('%', createPercentHandler());
-  handlers.set('p', createPercentRoundedHandler());
-  handlers.set('e', createScientificHandler());
-  handlers.set('E', createScientificHandler());
-  handlers.set('s', createCompactHandler());
-  handlers.set('S', createCompactHandler());
-  handlers.set('g', createGeneralHandler(6));
-  handlers.set('G', createGeneralHandler(6));
-  handlers.set('', createGeneralHandler(6));
-  handlers.set('n', createGeneralHandler(6));
-  handlers.set('N', createGeneralHandler(6));
-  handlers.set('r', createRoundedDecimalHandler());
-  handlers.set('R', createRoundedDecimalHandler());
-  return handlers;
-}
+function createGenericHandler(): TemplateHandler {
+  return (specifier) => {
+    const runtime = specifier as RuntimeFormatSpecifier;
+    const precision = readPrecision(runtime);
+    const trim = isTrimEnabled(runtime);
 
-const INITIAL_CONFIG: InternalTemplateConfig = {
-  defaults: {},
-  defaultCurrency: undefined,
-  typeDefaults: new Map<string, UseFormatOptions>([['n', { useGrouping: true }]]),
-  typeHandlers: createDefaultHandlers(),
-};
-
-let templateConfig: InternalTemplateConfig = cloneConfig(INITIAL_CONFIG);
-
-function normalizePluginHandlers(
-  handlers: readonly TemplatePluginHandler[],
-): TemplatePluginHandler[] {
-  return handlers.map(({ type, handler, defaults }) => ({
-    type,
-    handler,
-    defaults: defaults ? cloneOptions(defaults) : defaults,
-  }));
-}
-
-function applyPluginTemplateHandlers(
-  handlers: readonly TemplatePluginHandler[],
-): PluginTemplateState {
-  const handlerSnapshots = handlers.map(({ type, handler }) => {
-    const existed = templateConfig.typeHandlers.has(type);
-    const previous = existed ? templateConfig.typeHandlers.get(type) : undefined;
-    templateConfig.typeHandlers.set(type, handler);
-    return { type, previous, existed };
-  });
-
-  const defaultSnapshots = handlers
-    .filter(({ defaults }) => defaults !== undefined)
-    .map(({ type, defaults }) => {
-      const existed = templateConfig.typeDefaults.has(type);
-      const previous = existed ? cloneOptions(templateConfig.typeDefaults.get(type)) : undefined;
-
-      if (defaults === null) {
-        templateConfig.typeDefaults.delete(type);
-      } else {
-        templateConfig.typeDefaults.set(type, cloneOptions(defaults));
-      }
-
-      return { type, previous, existed };
-    });
-
-  return { definitions: handlers, handlers: handlerSnapshots, defaults: defaultSnapshots };
-}
-
-export function registerPluginTemplateHandlers(
-  plugin: string,
-  handlers: readonly TemplatePluginHandler[],
-): void {
-  if (!plugin) {
-    throw new Error('Plugin name must be a non-empty string.');
-  }
-
-  if (pluginTemplateStates.has(plugin)) {
-    unregisterPluginTemplateHandlers(plugin);
-  }
-
-  if (!handlers || handlers.length === 0) {
-    return;
-  }
-
-  const normalized = normalizePluginHandlers(handlers);
-  const state = applyPluginTemplateHandlers(normalized);
-  pluginTemplateStates.set(plugin, { ...state, definitions: normalized });
-}
-
-export function unregisterPluginTemplateHandlers(plugin: string): void {
-  const state = pluginTemplateStates.get(plugin);
-  if (!state) {
-    return;
-  }
-
-  state.handlers.forEach(({ type, previous, existed }) => {
-    if (existed) {
-      if (previous) {
-        templateConfig.typeHandlers.set(type, previous);
-      } else {
-        templateConfig.typeHandlers.delete(type);
-      }
-    } else {
-      templateConfig.typeHandlers.delete(type);
+    let options: UseFormatOptions = { style: 'decimal' };
+    if (precision !== undefined) {
+      options = applySignificantDigits(options, precision, trim);
     }
-  });
-
-  state.defaults.forEach(({ type, previous, existed }) => {
-    if (existed) {
-      if (previous) {
-        templateConfig.typeDefaults.set(type, cloneOptions(previous));
-      } else {
-        templateConfig.typeDefaults.delete(type);
-      }
-    } else {
-      templateConfig.typeDefaults.delete(type);
-    }
-  });
-
-  pluginTemplateStates.delete(plugin);
+    return options;
+  };
 }
 
-function getHandlerForType(type: string): TemplateHandler | undefined {
-  const direct = templateConfig.typeHandlers.get(type);
-  if (direct) {
-    return direct;
-  }
-  const lower = type.toLowerCase();
-  if (lower !== type) {
-    return templateConfig.typeHandlers.get(lower);
-  }
-  return undefined;
+function createIntegerHandler(): TemplateHandler {
+  return (specifier) => {
+    const runtime = specifier as RuntimeFormatSpecifier;
+    const options: UseFormatOptions = { style: 'decimal' };
+    const trim = isTrimEnabled(runtime);
+
+    return applyFractionDigits(options, 0, trim);
+  };
 }
 
-function getTypeDefaults(type: string): UseFormatOptions | undefined {
-  const direct = templateConfig.typeDefaults.get(type);
-  if (direct) {
-    return cloneOptions(direct);
-  }
-  const lower = type.toLowerCase();
-  if (lower !== type) {
-    const fallback = templateConfig.typeDefaults.get(lower);
-    if (fallback) {
-      return cloneOptions(fallback);
-    }
-  }
-  return undefined;
+function mergeOptions(base: UseFormatOptions, extra?: UseFormatOptions): UseFormatOptions {
+  return extra ? { ...base, ...extra } : base;
 }
 
-function applySpecifierAdjustments(
-  baseOptions: UseFormatOptions,
-  specifier: FormatSpecifier,
-  type: string,
-  overrides?: UseFormatOptions,
-): UseFormatOptions {
-  const runtime = specifier as RuntimeFormatSpecifier;
-  const next: UseFormatOptions = { ...baseOptions };
+function resolveTypeHandler(type: string): TemplateHandler | undefined {
+  return manualHandlers.get(type) ?? templateConfig.typeHandlers.get(type) ?? BASE_TYPE_HANDLERS[type];
+}
 
-  if (runtime.comma) {
+function resolveTypeDefaults(type: string): UseFormatOptions | undefined {
+  return templateConfig.typeDefaults.get(type);
+}
+
+function applyCommonFlags(options: UseFormatOptions, specifier: RuntimeFormatSpecifier): UseFormatOptions {
+  const next = { ...options } as UseFormatOptions;
+
+  if (specifier.sign === '+') {
+    next.includeSign = true;
+    next.signDisplay = 'always';
+  }
+  if (specifier.comma) {
     next.useGrouping = true;
-  } else if (next.useGrouping === undefined) {
-    next.useGrouping = false;
   }
-
-  switch (runtime.sign) {
-    case '+':
-      next.signDisplay = 'always';
-      break;
-    case ' ':
-      next.signDisplay = 'exceptZero';
-      break;
-    case '(':
-      if (next.style === 'currency') {
-        next.currencySign = 'accounting';
-      } else {
-        next.signDisplay = 'always';
-      }
-      break;
-    default:
-      break;
+  if (specifier.zero) {
+    next.useGrouping ??= false;
   }
-
-  if (runtime.trim && next.trailingZeroDisplay === undefined) {
-    next.trailingZeroDisplay = 'stripIfInteger';
-  }
-
-  if (runtime.symbol === '$') {
-    const resolvedCurrency =
-      overrides?.currency ?? next.currency ?? templateConfig.defaultCurrency;
-    if (!resolvedCurrency) {
-      throw new Error(
-        `Format template "${specifier.toString()}" requires a currency code. ` +
-          'Provide one via overrides or configureFormatTemplate({ defaultCurrency }).',
-      );
-    }
-    next.style = 'currency';
-    next.currency = resolvedCurrency;
-  }
-
-  // 零填充使用最小整数位数做近似处理
-  if (runtime.zero && typeof runtime.width === 'number' && runtime.width > 0) {
-    const minimumIntegerDigits = Math.max(1, Math.floor(runtime.width));
-    if (!Number.isNaN(minimumIntegerDigits)) {
-      next.minimumIntegerDigits = Math.max(next.minimumIntegerDigits ?? 0, minimumIntegerDigits);
-    }
-  }
-
-  if (!next.style) {
-    next.style = type === '%' ? 'percent' : 'decimal';
+  if (specifier.width && specifier.width > 0) {
+    next.minimumIntegerDigits = Math.min(21, Math.max(1, Math.floor(specifier.width)));
   }
 
   return next;
 }
 
-function mergeOptionsChain(optionsList: UseFormatOptions[]): UseFormatOptions {
-  return optionsList.reduce<UseFormatOptions>((acc, current) => {
-    if (!current || Object.keys(current).length === 0) {
-      return acc;
-    }
-    return { ...acc, ...current };
-  }, {});
+function ensureCurrencyDefaults(options: UseFormatOptions): UseFormatOptions {
+  if (options.style === 'currency' && !options.currency && templateConfig.defaultCurrency) {
+    return { ...options, currency: templateConfig.defaultCurrency };
+  }
+  return options;
 }
 
+function applySymbolOverrides(
+  options: UseFormatOptions,
+  specifier: RuntimeFormatSpecifier,
+): UseFormatOptions {
+  if (specifier.symbol === '$') {
+    const next = { ...options, style: 'currency' } as UseFormatOptions;
+    if (!next.currency && templateConfig.defaultCurrency) {
+      next.currency = templateConfig.defaultCurrency;
+    }
+    return next;
+  }
+  return options;
+}
+
+function buildOptions(
+  specifier: RuntimeFormatSpecifier,
+  type: string,
+  overrides?: UseFormatOptions,
+): UseFormatOptions {
+  // 1. 基础默认值
+  let options = cloneOptions(templateConfig.defaults);
+
+  // 2. 类型默认值
+  const defaults = resolveTypeDefaults(type);
+  if (defaults) {
+    options = mergeOptions(options, defaults);
+  }
+
+  if (options.style === undefined) {
+    options = { ...options, style: 'decimal' };
+  }
+  if (options.useGrouping === undefined) {
+    options = { ...options, useGrouping: false };
+  }
+
+  // 3. 类型处理器
+  const handler = resolveTypeHandler(type);
+  if (handler) {
+    options = mergeOptions(options, handler(specifier, type));
+  }
+  if (options.style === undefined) {
+    options = { ...options, style: 'decimal' };
+  }
+
+  // 4. 根据符号、分组等常规标记补充参数
+  options = applyCommonFlags(options, specifier);
+
+  // 5. 根据 $ 符号切换货币样式
+  options = applySymbolOverrides(options, specifier);
+
+  // 6. 补全默认货币
+  options = ensureCurrencyDefaults(options);
+
+  // 7. 外部覆盖项优先级最高
+  if (overrides) {
+    options = mergeOptions(options, overrides);
+  }
+
+  return options;
+}
+
+function parseSpecifier(template: string): { specifier: FormatSpecifier; type: string } {
+  const cached = templateSpecifierCache.get(template);
+  if (cached) {
+    return cached;
+  }
+  const specifier = formatSpecifier(template);
+  const type = specifier.type || DEFAULT_TEMPLATE_TYPE;
+  const record = { specifier, type } as const;
+  templateSpecifierCache.set(template, record);
+  return record;
+}
+
+function clearCaches(): void {
+  templateSpecifierCache.clear();
+}
+
+function internalRegisterPlugin(registration: TemplatePluginRegistration, track = true): void {
+  if (track && pluginStates.has(registration.plugin)) {
+    unregisterPluginTemplateHandlers(registration.plugin);
+  }
+
+  const record: PluginRecord = { handlers: [], defaults: [] };
+
+  for (const definition of registration.handlers) {
+    const { type, handler, defaults } = definition;
+
+    const previousHandler = templateConfig.typeHandlers.get(type);
+    const existedHandler = templateConfig.typeHandlers.has(type);
+    templateConfig.typeHandlers.set(type, handler);
+    record.handlers.push({ type, previous: previousHandler, existed: existedHandler });
+
+    if (defaults !== undefined) {
+      const previousDefaults = templateConfig.typeDefaults.get(type);
+      const existedDefaults = templateConfig.typeDefaults.has(type);
+
+      if (defaults === null) {
+        templateConfig.typeDefaults.delete(type);
+      } else {
+        templateConfig.typeDefaults.set(type, { ...defaults });
+      }
+
+      record.defaults.push({
+        type,
+        previous: previousDefaults,
+        existed: existedDefaults,
+      });
+    }
+  }
+
+  if (track) {
+    pluginStates.set(registration.plugin, record);
+  }
+
+  clearCaches();
+}
+
+function restorePluginRecord(record: PluginRecord): void {
+  for (const item of record.handlers) {
+    if (item.existed && item.previous) {
+      templateConfig.typeHandlers.set(item.type, item.previous);
+    } else {
+      templateConfig.typeHandlers.delete(item.type);
+    }
+  }
+
+  for (const item of record.defaults) {
+    if (item.existed && item.previous) {
+      templateConfig.typeDefaults.set(item.type, { ...item.previous });
+    } else {
+      templateConfig.typeDefaults.delete(item.type);
+    }
+  }
+}
+
+function reapplyBuiltinPlugins(): void {
+  for (const integration of builtinTemplateIntegrations) {
+    internalRegisterPlugin(integration, false);
+  }
+}
+
+// 初始化时加载默认配置与内置插件
+resetFormatTemplateConfig();
+
+/**
+ * 解析模板并返回核心消费所需的配置。
+ *
+ * @param template D3-format 风格模板字符串
+ * @param overrides 同步传入的覆盖选项
+ */
 export function resolveFormatTemplate(
   template: string,
   overrides?: UseFormatOptions,
 ): FormatTemplateResolution {
-  if (typeof template !== 'string' || template.trim().length === 0) {
-    throw new Error('Format template must be a non-empty string.');
-  }
+  const { specifier, type } = parseSpecifier(template);
+  const runtime = specifier as RuntimeFormatSpecifier;
 
-  const specifier = formatSpecifier(template);
-  const type = (specifier.type ?? DEFAULT_TEMPLATE_TYPE).toString();
-
-  const handler =
-    getHandlerForType(type) ??
-    getHandlerForType(type.toLowerCase()) ??
-    getHandlerForType(DEFAULT_TEMPLATE_TYPE);
-
-  if (!handler) {
-    throw new Error(`No format template handler registered for type "${type}".`);
-  }
-
-  const optionsChain: UseFormatOptions[] = [];
-  optionsChain.push(cloneOptions(templateConfig.defaults));
-
-  const typeDefault = getTypeDefaults(type);
-  if (typeDefault) {
-    optionsChain.push(typeDefault);
-  }
-
-  const handlerOptions = handler(specifier, type);
-  optionsChain.push(handlerOptions);
-
-  let merged = mergeOptionsChain(optionsChain);
-  merged = applySpecifierAdjustments(merged, specifier, type, overrides);
-
-  if (overrides) {
-    merged = { ...merged, ...overrides };
-  }
+  // 通过缓存避免重复解析模板，提高性能
+  const options = buildOptions(runtime, type, overrides);
 
   return {
     specifier,
     type,
-    options: merged,
+    options,
   };
 }
 
-export function getFormatTemplateConfig(): TemplateConfigSnapshot {
-  const snapshot = cloneConfig(templateConfig);
-  const typeDefaults: Record<string, UseFormatOptions> = {};
-  snapshot.typeDefaults.forEach((value, key) => {
-    typeDefaults[key] = value;
-  });
-
-  return {
-    defaults: snapshot.defaults,
-    defaultCurrency: snapshot.defaultCurrency,
-    typeDefaults,
-    registeredTypes: Array.from(new Set(snapshot.typeHandlers.keys())).sort(),
-  };
-}
-
-export function configureFormatTemplate(config: FormatTemplateConfig): TemplateConfigSnapshot {
+/**
+ * 使用配置模块批量调整模板默认行为。
+ */
+export function configureFormatTemplate(config: FormatTemplateConfig): void {
   if (config.defaults) {
-    templateConfig = {
-      ...templateConfig,
-      defaults: { ...templateConfig.defaults, ...config.defaults },
-    };
+    templateConfig.defaults = { ...config.defaults };
   }
-
   if (config.defaultCurrency !== undefined) {
-    templateConfig = {
-      ...templateConfig,
-      defaultCurrency: config.defaultCurrency || undefined,
-    };
+    templateConfig.defaultCurrency = config.defaultCurrency;
   }
-
   if (config.typeDefaults) {
-    const updated = new Map(templateConfig.typeDefaults.entries());
-    Object.entries(config.typeDefaults).forEach(([type, value]) => {
+    for (const [type, value] of Object.entries(config.typeDefaults)) {
       if (value === null) {
-        updated.delete(type);
-      } else if (value) {
-        updated.set(type, cloneOptions(value));
+        templateConfig.typeDefaults.delete(type);
+      } else {
+        templateConfig.typeDefaults.set(type, { ...value });
       }
-    });
-    templateConfig = { ...templateConfig, typeDefaults: updated };
+    }
   }
-
   if (config.typeHandlers) {
-    const updated = new Map(templateConfig.typeHandlers.entries());
-    Object.entries(config.typeHandlers).forEach(([type, handler]) => {
-      if (typeof handler === 'function') {
-        updated.set(type, handler);
-      }
-    });
-    templateConfig = { ...templateConfig, typeHandlers: updated };
+    for (const [type, handler] of Object.entries(config.typeHandlers)) {
+      templateConfig.typeHandlers.set(type, handler);
+    }
   }
 
-  return getFormatTemplateConfig();
+  clearCaches();
 }
 
+/**
+ * 设置特定类型的默认选项。
+ */
+export function setTemplateTypeDefaults(type: string, defaults?: UseFormatOptions): void {
+  if (defaults) {
+    templateConfig.typeDefaults.set(type, { ...defaults });
+  } else {
+    templateConfig.typeDefaults.delete(type);
+  }
+  clearCaches();
+}
+
+/**
+ * 注册自定义模板处理器，通常用于业务插件。
+ */
 export function registerTemplateHandler(type: string, handler: TemplateHandler): void {
   if (!type) {
-    throw new Error('Template type must be a non-empty string.');
-  }
-  templateConfig.typeHandlers.set(type, handler);
-}
-
-export function unregisterTemplateHandler(type: string): boolean {
-  return templateConfig.typeHandlers.delete(type);
-}
-
-export function setTemplateTypeDefaults(type: string, defaults: UseFormatOptions | null): void {
-  if (!type) {
-    throw new Error('Template type must be a non-empty string.');
-  }
-  if (!defaults) {
-    templateConfig.typeDefaults.delete(type);
     return;
   }
-  templateConfig.typeDefaults.set(type, cloneOptions(defaults));
+  manualHandlers.set(type, handler);
+  clearCaches();
 }
 
+/**
+ * 注销自定义模板处理器，恢复到注册前的状态。
+ */
+export function unregisterTemplateHandler(type: string): void {
+  if (!manualHandlers.has(type)) {
+    return;
+  }
+  manualHandlers.delete(type);
+  clearCaches();
+}
+
+/**
+ * 注册插件声明的一组模板处理器。
+ */
+export function registerPluginTemplateHandlers(
+  plugin: string,
+  handlers: readonly TemplatePluginHandler[],
+): void {
+  if (!plugin) {
+    return;
+  }
+  const registration: TemplatePluginRegistration = { plugin, handlers };
+  internalRegisterPlugin(registration, true);
+}
+
+/**
+ * 注销插件模板处理器。
+ */
+export function unregisterPluginTemplateHandlers(plugin: string): void {
+  if (!plugin) {
+    return;
+  }
+  const record = pluginStates.get(plugin);
+  if (!record) {
+    return;
+  }
+  pluginStates.delete(plugin);
+  restorePluginRecord(record);
+  clearCaches();
+}
+
+/**
+ * 重置模板配置，保留内置插件处理能力。
+ */
 export function resetFormatTemplateConfig(): void {
-  const existingIntegrations = Array.from(pluginTemplateStates.entries()).map(([plugin, state]) => ({
-    plugin,
-    handlers: state.definitions,
-  }));
-
-  pluginTemplateStates.clear();
-  templateConfig = cloneConfig(INITIAL_CONFIG);
-
-  existingIntegrations.forEach(({ plugin, handlers }) => {
-    registerPluginTemplateHandlers(plugin, handlers);
-  });
+  templateConfig = createEmptyConfig();
+  pluginStates.clear();
+  manualHandlers.clear();
+  clearCaches();
+  reapplyBuiltinPlugins();
 }
-
-function registerBuiltinTemplateIntegrations(): void {
-  builtinTemplateIntegrations.forEach(({ plugin, handlers }) => {
-    registerPluginTemplateHandlers(plugin, handlers);
-  });
-}
-
-registerBuiltinTemplateIntegrations();
-
-export type { TemplateHandler, TemplatePluginHandler, TemplatePluginRegistration } from './template-types';
-
