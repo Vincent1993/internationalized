@@ -30,6 +30,10 @@
       "./core": {
         "types": "./dist/core/index.d.ts",
         "import": "./dist/core.mjs"
+      },
+      "./date-fns": {
+        "types": "./dist/date-fns.d.ts",
+        "import": "./dist/date-fns.mjs"
       }
     }
   },
@@ -38,7 +42,8 @@
     "./components": "./src/components/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./core": "./src/core/index.ts",
-    "./fp": "./src/fp/index.ts"
+    "./fp": "./src/fp/index.ts",
+    "./date-fns": "./src/date-fns.ts"
   },
   "files": [
     "dist",

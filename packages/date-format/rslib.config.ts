@@ -11,7 +11,8 @@ export default defineConfig({
           index: './src/index.ts',
           components: './src/components/index.ts',
           hooks: './src/hooks/index.ts',
-          core: './src/core/index.ts'
+          core: './src/core/index.ts',
+          'date-fns': './src/date-fns.ts'
         }
       },
       banner: {

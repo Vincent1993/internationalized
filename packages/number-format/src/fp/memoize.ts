@@ -3,54 +3,14 @@ import type { ParseOptions } from '../core/parser';
 import { NumberParser } from '../core/parser';
 import { createNumberFormat } from '../core/formatter';
 import { createCacheKey } from '../utils/cache-key';
-
-interface CacheItem<T> {
-  value: T;
-  timestamp: number;
-}
-
-interface SimpleCache<T> {
-  get: (key: string) => T | undefined;
-  set: (key: string, value: T) => void;
-  clear: () => void;
-  size: () => number;
-}
-
-function createSimpleCache<T>(maxSize = 200): SimpleCache<T> {
-  const cache = new Map<string, CacheItem<T>>();
-
-  return {
-    get(key: string): T | undefined {
-      const item = cache.get(key);
-      return item?.value;
-    },
-
-    set(key: string, value: T): void {
-      if (cache.size >= maxSize) {
-        const oldestKey = cache.keys().next().value;
-        if (oldestKey !== undefined) {
-          cache.delete(oldestKey);
-        }
-      }
-      cache.set(key, { value, timestamp: Date.now() });
-    },
-
-    clear(): void {
-      cache.clear();
-    },
-
-    size(): number {
-      return cache.size;
-    },
-  };
-}
+import { createSimpleCache } from '@internationalized/shared';
 
 // =============================================================================
 // 专用缓存实例
 // =============================================================================
 
-const formatterCache = createSimpleCache<NumberFormatter>(200);
-const parserCache = createSimpleCache<NumberParser>(200);
+const formatterCache = createSimpleCache<NumberFormatter>({ maxSize: 200 });
+const parserCache = createSimpleCache<NumberParser>({ maxSize: 200 });
 const DEFAULT_FORMATTER_CACHE_KEY = '__default__';
 
 export function getMemoizedFormatter(options: UseFormatOptions = {}): NumberFormatter {

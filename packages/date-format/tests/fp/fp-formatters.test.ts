@@ -9,6 +9,7 @@ import {
   config,
   resetDefaultConfigs,
 } from '../../src/fp';
+import { startOfDay as exportedStartOfDay } from '../../src';
 
 const SAMPLE_DATE = new Date('2024-05-20T08:30:00Z');
 
@@ -67,5 +68,11 @@ describe('日期函数式 API', () => {
     expect(detailed.start.formattedValue).toBe('2024/5/20');
     expect(detailed.end.formattedValue).toBe('2024/5/22');
     expect(detailed.resolvedOptions.locale).toBe('zh-CN');
+  });
+
+  it('应该直接从包入口二次导出 date-fns 的 startOfDay', () => {
+    const normalized = exportedStartOfDay(new Date('2024-05-20T18:00:00Z'));
+
+    expect(normalized.toISOString()).toBe('2024-05-20T00:00:00.000Z');
   });
 });

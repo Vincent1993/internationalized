@@ -1,11 +1,8 @@
+import { createSimpleCache } from '@internationalized/shared';
 import { createDateFormatter } from '../core/formatter';
 import type { DateFormatter, UseDateFormatOptions } from '../core/types';
 
-interface CacheItem<T> {
-  value: T;
-}
-
-const formatterCache = new Map<string, CacheItem<DateFormatter>>();
+const formatterCache = createSimpleCache<DateFormatter>({ maxSize: 100 });
 const DEFAULT_CACHE_KEY = '__default__';
 const MAX_CACHE_SIZE = 100;
 
@@ -46,17 +43,6 @@ function createCacheKey(options: UseDateFormatOptions = {}): string {
   return JSON.stringify(normalized);
 }
 
-function ensureCacheLimit(): void {
-  if (formatterCache.size <= MAX_CACHE_SIZE) {
-    return;
-  }
-
-  const oldestKey = formatterCache.keys().next().value;
-  if (oldestKey) {
-    formatterCache.delete(oldestKey);
-  }
-}
-
 /**
  * @description 获取带缓存的日期格式化器实例。
  */
@@ -65,12 +51,11 @@ export function getMemoizedFormatter(options: UseDateFormatOptions = {}): DateFo
   const cached = formatterCache.get(key);
 
   if (cached) {
-    return cached.value;
+    return cached;
   }
 
   const formatter = createDateFormatter(options);
-  formatterCache.set(key, { value: formatter });
-  ensureCacheLimit();
+  formatterCache.set(key, formatter);
 
   // 通过一次示例调用预热格式化器，避免首次调用时的延迟。
   try {
@@ -95,7 +80,7 @@ export function clearAllFPCaches(): void {
 export function getFPCacheStats(): { formatter: { size: number; maxSize: number } } {
   return {
     formatter: {
-      size: formatterCache.size,
+      size: formatterCache.size(),
       maxSize: MAX_CACHE_SIZE,
     },
   };

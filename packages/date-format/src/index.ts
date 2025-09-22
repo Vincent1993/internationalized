@@ -19,3 +19,4 @@ export type {
 } from './core';
 
 export * from './fp';
+export * from './date-fns';

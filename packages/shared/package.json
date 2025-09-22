@@ -9,7 +9,9 @@
     ".": "./src/index.ts",
     "./components": "./src/components/index.ts",
     "./components/slot": "./src/components/Slot.tsx",
-    "./components/base": "./src/components/createBaseFormatComponent.tsx"
+    "./components/base": "./src/components/createBaseFormatComponent.tsx",
+    "./utils": "./src/utils/index.ts",
+    "./utils/memoize": "./src/utils/memoize.ts"
   },
   "files": [
     "src"
