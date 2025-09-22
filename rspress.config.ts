@@ -2,6 +2,8 @@ import { defineConfig } from 'rspress/config';
 import { pluginTwoslash } from '@rspress/plugin-twoslash';
 import { pluginTypeDoc } from '@rspress/plugin-typedoc';
 
+const numberFormatEntry = (path: string) => `packages/number-format/${path}`;
+
 export default defineConfig({
   base: '/internationalized/',
   title: 'Internationalized 数字格式化',
@@ -10,14 +12,13 @@ export default defineConfig({
   plugins: [
     pluginTwoslash(),
     pluginTypeDoc({
-
       entryPoints: [
-        'src/index.ts',
-        'src/core/index.ts',
-        'src/hooks/index.ts',
-        'src/components/index.ts',
-        'src/plugins/index.ts',
-        'src/fp/index.ts',
+        numberFormatEntry('src/index.ts'),
+        numberFormatEntry('src/core/index.ts'),
+        numberFormatEntry('src/hooks/index.ts'),
+        numberFormatEntry('src/components/index.ts'),
+        numberFormatEntry('src/plugins/index.ts'),
+        numberFormatEntry('src/fp/index.ts'),
       ],
     }),
   ],

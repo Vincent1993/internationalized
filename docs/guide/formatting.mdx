@@ -4,6 +4,8 @@
 
 ## 组件使用
 
+> 📌 版本说明：`NumberFormat` 自 **v0.0.1** 起提供。
+
 ```tsx
 import { NumberFormat } from 'internationalized';
 
@@ -14,6 +16,8 @@ import { NumberFormat } from 'internationalized';
 - 自动根据本地化规则输出千分位、货币符号和单位。
 
 ## Hook
+
+> 📌 版本说明：`useFormat` 自 **v0.0.1** 起提供。
 
 ```tsx
 import { useFormat } from 'internationalized/hooks';
@@ -34,6 +38,43 @@ formatAsCurrency(88.6, 'EUR');
 ```
 
 函数式入口便于在非 React 环境或服务端场景使用。
+
+> 📌 版本说明：`internationalized/fp` 下的所有函数自 **v0.0.1** 起提供。
+
+## 日期格式化组件
+
+`@internationalized/date-format` 包提供与数字组件同构的 API，内部基于 `date-fns` 处理输入并复用 `Intl.DateTimeFormat`。
+
+> 📌 版本说明：`DateFormat`、`DateFormatProvider` 与 `useDateFormat` 自 **v0.0.1** 起提供。
+
+```tsx
+import { DateFormat, DateFormatProvider, useDateFormat } from '@internationalized/date-format';
+
+function NextMeeting() {
+  const formatter = useDateFormat({
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Shanghai',
+  });
+
+  const meetingDate = new Date('2024-05-20T08:00:00Z');
+  const { formattedValue } = formatter.format(meetingDate);
+
+  return <output>{formattedValue}</output>;
+}
+
+export function App() {
+  return (
+    <DateFormatProvider options={{ locale: 'zh-CN', timeZone: 'Asia/Shanghai' }}>
+      <section>
+        <h2>下一次会议</h2>
+        <DateFormat value={Date.now()} dateStyle="full" timeStyle="short" />
+        <NextMeeting />
+      </section>
+    </DateFormatProvider>
+  );
+}
+```
 
 ## 动态小数位控制
 
@@ -69,5 +110,15 @@ registerNumberFormatPlugin({
 ```
 
 注册后即可在组件、Hook 与函数式 API 中共享。
+
+## API 首次支持版本速查
+
+| API | 首次支持版本 |
+| --- | --- |
+| `NumberFormat` / `AutoMetricNumber` | v0.0.1 |
+| `useFormat` / `useAutoFormat` / `useParse` | v0.0.1 |
+| `createNumberFormat` / `resolveFormatOptions` | v0.0.1 |
+| `createNumberParser` / `parseNumber` | v0.0.1 |
+| `DateFormat` / `useDateFormat` / `DateFormatProvider` | v0.0.1 |
 
 > 📚 想要以配置字符串管理格式化规则？请继续阅读[模板字符串](./templates.mdx) 章节，了解如何通过 `formatWithTemplate` 统一驱动 FP 与插件能力。
