@@ -28,42 +28,52 @@ export interface FormatterDefaults {
 
 const INITIAL_DEFAULTS: FormatterDefaults = {
   decimal: {
+    locale: 'zh-CN',
     style: 'decimal',
   },
   integer: {
+    locale: 'zh-CN',
     style: 'decimal',
     maximumFractionDigits: 0,
   },
   currency: {
+    locale: 'zh-CN',
     style: 'currency',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   },
   percent: {
+    locale: 'zh-CN',
     style: 'percent',
     maximumFractionDigits: 2,
   },
   perMille: {
+    locale: 'zh-CN',
     style: 'per-mille',
     maximumFractionDigits: 2,
   },
   perMyriad: {
+    locale: 'zh-CN',
     style: 'per-myriad',
     maximumFractionDigits: 2,
   },
   percentagePoint: {
+    locale: 'zh-CN',
     style: 'percentage-point',
     maximumFractionDigits: 2,
   },
   cnUpper: {
+    locale: 'zh-CN',
     style: 'cn-upper',
   },
   compact: {
+    locale: 'zh-CN',
     style: 'decimal',
     notation: 'compact',
     maximumFractionDigits: 1,
   },
   scientific: {
+    locale: 'zh-CN',
     style: 'decimal',
     notation: 'scientific',
     maximumFractionDigits: 3,

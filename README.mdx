@@ -15,6 +15,7 @@
 - 📋 功能矩阵（核心格式化、解析、高级特性、类型）
 - 🎯 使用场景对比
 - 💻 快速示例
+- 🧩 模板字符串
 - 🛠️ 开发指南
 - ✅ 测试与质量
 - ♻️ 缓存策略
@@ -104,6 +105,20 @@ import { NumberFormat } from '@dfx/number-format';
 />
 // 输出：0.00000012
 ```
+
+## 🧩 模板字符串
+
+通过 `formatWithTemplate` 可以直接复用 `d3-format` 的模板体验，并自动映射到内部的 `Intl` 配置：
+
+```ts
+import { formatWithTemplate } from '@dfx/number-format/fp';
+
+formatWithTemplate('currency|$.2f', 1234.56); // => "￥1,234.56"
+formatWithTemplate('per-mille|.1%', 0.258); // => "258.0‰"
+formatWithTemplate('cn-upper', 1024); // => "壹仟零贰拾肆"
+```
+
+> 📚 在 [文档站点](https://vincent1993.github.io/internationalized/) 的“模板字符串”和“插件与架构”章节可以查看完整的配置说明、内置插件列表以及如何扩展。
 
 ## 📋 功能矩阵
 

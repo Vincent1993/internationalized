@@ -1,0 +1,77 @@
+# 插件系统
+
+`internationalized` 的插件系统为所有格式化与解析流程提供扩展点，覆盖预处理、格式化、后处理及解析阶段，并默认加载了一套可以直接投入生产的插件组合。【F:src/core/formatter.ts†L33-L119】【F:src/plugins/registry.ts†L1-L120】
+
+## 执行阶段
+
+| 阶段 | 说明 | 常见用途 |
+|------|------|----------|
+| `pre-process` | 在调用 `Intl.NumberFormat` 前处理输入值与选项 | 校验配置、放大百分比、动态补足小数位 |
+| `format` | `Intl` 已产出结果，格式化字符串尚未返回 | 添加自定义后缀、拆分 parts |
+| `post-process` | 统一的收尾阶段 | 异常值回退、补齐符号、单位追加 |
+| `pre-parse` / `post-parse` | 解析链路的前后处理 | 去除自定义后缀、倍率还原 |
+
+插件注册表会按照优先级排序并缓存适用插件，确保性能稳定；同一阶段内还支持插件组与动态启用/禁用，用于按需裁剪能力。【F:src/plugins/registry.ts†L21-L120】【F:src/plugins/registry.ts†L121-L208】
+
+## 内置插件与插件组
+
+### 运行时校验（`validator`）
+
+- **阶段**：`pre-process`
+- **作用**：校验 `Intl.NumberFormat` 选项，在开发环境抛出详细错误，在生产环境尝试修复可恢复的问题。【F:src/plugins/validator/index.ts†L1-L45】
+
+### 千分比/万分比/百分点插件组
+
+- **阶段**：`pre-process` + `post-process`
+- **组成**：`per-mille`、`per-myriad`、`percentage-point` 三个插件组共用倍率、符号和解析规则。
+- **特性**：
+  - 自动按倍率放大/缩小数值（1000、10000、100）。
+  - 在格式化结果尾部追加 `‰`、`‱`、`pp`。
+  - 解析时支持严格模式校验后缀。
+- **引用**：所有配置来自 `RATIO_PLUGIN_CONFIGS`，便于扩展或覆盖描述文案。【F:src/plugins/shared/constants.ts†L3-L78】【F:src/plugins/per-mille/index.ts†L1-L9】
+
+### 中文大写插件组（`chinese-upper`）
+
+- **阶段**：`format`/`post-process`/`post-parse`
+- **作用**：
+  - 将数值转换为中文大写（含负数、整数、小数）。
+  - 解析中文大写字符串回数字。
+  - 禁用千分位分组以保证排版一致。【F:src/plugins/chinese-uppercase/index.ts†L1-L120】【F:src/fp/templates.ts†L150-L205】
+
+### 固定小数位（`fix-decimals`）
+
+- **阶段**：`pre-process`
+- **作用**：当启用 `extend_fixDecimals` 时强制对齐最小与最大小数位，常用于 KPI 展示或金额对齐。【F:src/plugins/fix-decimals/index.ts†L1-L21】【F:src/plugins/types.ts†L218-L226】
+
+### 动态小数位（`dynamic-decimal-precision`）
+
+- **阶段**：`pre-process`
+- **作用**：针对极小数值自动扩展小数位数，直到出现首个非零位或达到阈值；超过阈值后切换到科学记数法，并保留额外配置的精度。【F:src/plugins/dynamic-decimals/index.ts†L1-L182】
+- **配置**：通过 `extend_dynamicDecimals` 自定义最大探测位数、附加小数位、科学记数法兜底策略等。【F:src/plugins/types.ts†L13-L44】【F:src/plugins/dynamic-decimals/index.ts†L94-L182】
+
+### 异常值回退（`fallback`）
+
+- **阶段**：`post-process`
+- **作用**：针对 `null`、`undefined`、`NaN`、`±Infinity` 等输入输出可读的兜底文本，并可按样式自定义策略或保留原有前后缀。【F:src/plugins/fallback/index.ts†L1-L158】
+
+## 扩展选项（`extend_*`）
+
+插件系统通过 `CoreExtensionOptions` 暴露了一组与 `Intl` 正交的扩展配置，可在组件、Hook、FP 以及模板场景下统一使用：【F:src/plugins/types.ts†L218-L226】
+
+| 选项 | 说明 |
+|------|------|
+| `extend_includeSign` | 强制输出正号，优先级高于旧版 `includeSign`。|
+| `extend_signZeroMode` | 控制零值符号（`auto`/`always`），配合金融类展示。|
+| `extend_negativeZero` | 处理 `-0` 显示，选择视为 0 或保留符号。|
+| `extend_fixDecimals` | 固定小数位，触发 `fix-decimals` 插件。|
+| `extend_dynamicDecimals` | 动态小数位控制，触发 `dynamic-decimal-precision` 插件。|
+
+这些选项会在核心格式化器中合并到插件上下文，插件内部仅读取扩展字段，避免污染原生 `Intl` 参数。【F:src/core/formatter.ts†L297-L320】
+
+## 自定义与调试
+
+- **注册自定义插件**：使用 `registerPlugin` 或 `registerGroup` 将插件注入全局注册表；在测试环境可搭配 `resetPlugins` 替换整套插件组合。【F:src/plugins/registry.ts†L121-L220】
+- **查询状态**：通过 `getRegisteredPlugins` 获取当前注册信息，便于调试或文档展示。【F:src/plugins/registry.ts†L161-L200】
+- **启用/禁用**：`setPluginEnabled` 与 `setGroupEnabled` 支持按需关闭某个插件或整个插件组，常用于 A/B 测试或性能排查。【F:src/plugins/registry.ts†L79-L120】
+
+> 📌 建议在应用初始化时完成插件注册，并在服务端渲染或多实例环境中避免直接调用 `resetPlugins`，以免影响其他请求的行为。

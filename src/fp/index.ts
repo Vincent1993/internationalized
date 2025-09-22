@@ -28,6 +28,9 @@ export {
   formatAsScientificEx,
 } from './formatters';
 
+// 模板格式化
+export { formatWithTemplate, formatWithTemplateEx } from './templates';
+
 // 解析函数
 export {
   parseDecimal,
@@ -48,6 +51,15 @@ export { clearAllFPCaches, clearCache, clearFormatterCache, clearParserCache } f
 
 // 配置管理
 export { config, resetDefaultConfigs, type FormatterDefaults } from './defaults';
+
+// 模板配置
+export {
+  configTemplates,
+  resetTemplateConfig,
+  type TemplateConfigState,
+  type TemplateConfigEntry,
+  type TemplateConfigurationInput,
+} from './templates';
 
 // 核心类型
 export type { ParseResult, ParseOptions } from '../core/parser';

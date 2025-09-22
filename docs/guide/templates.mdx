@@ -1,0 +1,119 @@
+# 模板字符串
+
+模板字符串是 `internationalized` 的增强层，通过与 `d3-format` 的 specifier 对齐，
+让我们可以用一行配置描述完整的格式化语义，然后自动映射到内部的 Intl 配置、插件扩展与缓存系统。【F:src/fp/templates.ts†L1-L205】
+
+## 为什么选择模板
+
+- **熟悉的语法**：沿用 `d3-format` 的写法，`$.2f`、`.1%` 等 specifier 都可以直接使用。【F:src/fp/templates.ts†L158-L205】
+- **插件互通**：`per-mille`、`per-myriad`、`percentage-point`、`cn-upper` 等扩展样式都会通过模板自动挂接对应的插件组，无需额外处理。【F:src/fp/templates.ts†L185-L205】【F:src/plugins/index.ts†L18-L28】
+- **同源缓存与校验**：模板解析后的选项会继续走核心格式化器与插件管线，享受统一的缓存、校验和异常处理能力。【F:src/core/formatter.ts†L1-L119】
+
+## 快速上手
+
+```ts twoslash
+import { formatWithTemplate, formatWithTemplateEx } from 'internationalized/fp';
+
+formatWithTemplate('currency|$.2f', 1234.56);
+//=> "￥1,234.56"
+
+const result = formatWithTemplateEx('percent|+.1%', 0.256, { locale: 'en-US' });
+// result.formattedValue === "+25.6%"
+// result.resolvedOptions.extend_includeSign === true
+```
+
+`formatWithTemplate` 返回字符串结果，`formatWithTemplateEx` 则保留 `formatToParts`、符号信息和解析后的选项，便于后续渲染或调试。【F:src/fp/templates.ts†L321-L357】
+
+## 语法结构
+
+模板由两部分组成：
+
+1. **可选 token**：位于 `|` 分隔符左侧，用于显式指定插件化样式，例如 `currency`、`per-mille`。
+2. **d3 specifier**：位于右侧，兼容 `d3-format` 的绝大多数标记，例如 `$.2f`、`.3s`、`+.4g`。
+
+> 没有 `|` 时会直接解析 specifier，并根据 specifier 类型自动匹配默认配置。
+
+### 常用 token 列表
+
+| Token | 目标样式 | 效果 |
+|-------|----------|------|
+| `decimal` | `decimal` | 标准小数，遵循 `.nf` 类 specifier 的精度推导 | 
+| `integer` | `decimal` | 自动设置为整数显示，等价于 `extend_fixDecimals: 0` | 
+| `currency` | `currency` | 强制货币样式，并自动应用默认货币代码（默认 `CNY`） | 
+| `percent` | `percent` | 百分比插件，支持 `.1%` 等 specifier | 
+| `per-mille` / `permille` / `‰` | `per-mille` | 千分比插件，结尾会追加 `‰` | 
+| `per-myriad` / `permyriad` / `‱` | `per-myriad` | 万分比/百分点插件，结尾会追加 `‱` | 
+| `percentage-point` / `percentagepoint` / `pp` | `percentage-point` | 百分点插件，结果带 `pp` | 
+| `cn-upper` / `cnupper` | `cn-upper` | 中文大写数字插件，禁用分组符号 |
+
+所有 token 会在解析阶段被归一化（忽略大小写与多余空格），方便与业务自定义扩展组合。【F:src/fp/templates.ts†L107-L144】【F:src/fp/templates.ts†L185-L205】
+
+### 支持的 d3 specifier
+
+- `f` / `d` / `i`：定点小数、整数，自动推导 `extend_fixDecimals` 或 `maximumFractionDigits`。
+- `%` / `p`：百分比样式，与 `percent` token 结合时会放大 100 倍并追加 `%`。
+- `s`：紧凑记数，自动映射为 `notation: 'compact'` 并推导有效数字位数。
+- `e`：科学记数法，转为 `notation: 'scientific'`。
+- `g` / `r`：有效数字控制，可同时约束 `minimum` 与 `maximumSignificantDigits`。
+- `n`：强制启用分组符号的十进制格式。
+
+如果 specifier 未指定精度，模板会沿用默认配置；若使用 `+` 号，则会自动打开 `extend_includeSign` 以输出正号。【F:src/fp/templates.ts†L166-L245】
+
+## 与插件协同
+
+模板解析的结果最终会交由核心格式化器执行，因而可以继续使用 `extend_*` 扩展、动态小数位等能力：
+
+```ts twoslash
+import { formatWithTemplate } from 'internationalized/fp';
+
+formatWithTemplate('per-mille|.2%', 0.00523, {
+  extend_dynamicDecimals: { additionalDigits: 1 },
+});
+//=> "5.23‰"
+
+formatWithTemplate('cn-upper', 1234.56, {
+  extend_includeSign: true,
+});
+//=> "+壹仟贰佰叁拾肆点伍陆"
+```
+
+所有模板同样会触发校验插件、异常值回退插件等，因此 null、undefined、NaN 等输入会根据全局 fallback 策略输出可读文案。【F:src/core/formatter.ts†L33-L119】【F:src/plugins/fallback/index.ts†L1-L129】
+
+## 配置模板系统
+
+`configTemplates` 提供读取与更新模板映射的能力，可用于：
+
+- 修改默认货币代码，例如统一设置为 `USD`；
+- 新增 token，映射到自定义插件或特定默认配置；
+- 覆盖某个 specifier 的推导规则。
+
+```ts twoslash
+import { configTemplates } from 'internationalized/fp';
+
+// 读取当前配置
+const snapshot = configTemplates();
+console.log(snapshot.settings.currency); // "CNY"
+
+// 更新默认货币并新增一个 token
+configTemplates({
+  settings: { currency: 'USD' },
+  tokens: {
+    finance: {
+      targetType: 'currency',
+      defaults: { currency: 'USD', useGrouping: false },
+      forced: { style: 'currency' },
+    },
+  },
+});
+
+formatWithTemplate('finance|$.1f', 99.9);
+//=> "$99.9"
+```
+
+调用 `resetTemplateConfig()` 可以在测试或特定场景下恢复为初始状态，避免全局污染。【F:src/fp/templates.ts†L277-L357】
+
+## 典型用法建议
+
+- 将模板字符串与可视化配置存储在同一处（如数据库或配置中心），便于动态更新展示规则。
+- 若需要在 React 组件中使用，可结合 `formatWithTemplateEx` 获取 `parts` 与 `sign` 信息，实现带颜色或符号的展示。
+- 当模板解析失败时会抛出包含包名、版本与模块路径的错误，可直接定位到问题模板并修正。【F:src/fp/templates.ts†L246-L320】【F:src/utils/errors.ts†L1-L27】
