@@ -19,6 +19,8 @@ export {
 
 // ==================== 内置插件 ====================
 export { perMillePluginGroup } from './per-mille';
+export { perMyriadPluginGroup } from './per-myriad';
+export { percentPointPluginGroup } from './percent-point';
 export { fallbackPlugin, createFallbackPlugin } from './fallback';
 export { fixDecimalsPlugin } from './fix-decimals';
 

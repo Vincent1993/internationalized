@@ -144,6 +144,40 @@ export function formatAsPerMilleEx(
 }
 
 /**
+ * 将数字格式化为万分位 (‱) 字符串。
+ */
+export function formatAsPerMyriad(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): string {
+  return formatWithDefaults('perMyriad', value, options, { style: 'per-myriad' });
+}
+
+export function formatAsPerMyriadEx(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): UseFormatResult {
+  return formatResultWithDefaults('perMyriad', value, options, { style: 'per-myriad' });
+}
+
+/**
+ * 将数字格式化为百分点字符串（结尾追加“个百分点”）。
+ */
+export function formatAsPercentPoint(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): string {
+  return formatWithDefaults('percentPoint', value, options, { style: 'percent-point' });
+}
+
+export function formatAsPercentPointEx(
+  value: unknown,
+  options?: Omit<UseFormatOptions, 'style'>,
+): UseFormatResult {
+  return formatResultWithDefaults('percentPoint', value, options, { style: 'percent-point' });
+}
+
+/**
  * 使用紧凑表示法格式化数字 (例如, 1.2M)。
  * @param value 要格式化的数字。
  * @param options 用于覆盖默认值的 Intl.NumberFormatOptions。

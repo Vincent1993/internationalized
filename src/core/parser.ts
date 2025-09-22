@@ -39,6 +39,16 @@ const percentPattern = /%$/;
 const perMillePattern = /‰$/;
 
 /**
+ * 万分号模式
+ */
+const perMyriadPattern = /‱$/;
+
+/**
+ * 百分点模式（兼容“百分点”“个百分点”以及 pp 缩写）
+ */
+const percentPointPattern = /(个?百分点|個?百分點|pp)$/iu;
+
+/**
  * 小数格式验证模式
  */
 const decimalFormatPattern = /^\d*\.?\d*$/;
@@ -68,8 +78,15 @@ const specialValues = {
 const mathConstants = {
   PERCENT_DIVISOR: '100',
   PER_MILLE_DIVISOR: '1000',
+  PER_MYRIAD_DIVISOR: '10000',
   ZERO: '0',
 } as const;
+
+const DECIMAL_FALLBACK_STYLES = new Set<UseFormatOptions['style']>([
+  'per-mille',
+  'per-myriad',
+  'percent-point',
+]);
 
 function decorateParseResult(result: ParseResult): ParseResult {
   const value = result.value;
@@ -153,7 +170,9 @@ export class NumberParser {
 
     // 创建格式化器（用于获取分隔符等信息）
     // per-mille 不是标准的 Intl.NumberFormat 样式，所以我们使用 decimal 作为回退
-    const formatterStyle = this.options.style === 'per-mille' ? 'decimal' : this.options.style;
+    const formatterStyle = DECIMAL_FALLBACK_STYLES.has(this.options.style)
+      ? 'decimal'
+      : this.options.style;
 
     this.formatter = new Intl.NumberFormat(this.options.locale, {
       style: formatterStyle,
@@ -312,6 +331,10 @@ export class NumberParser {
         return this.parseCurrency(input);
       case 'per-mille':
         return this.parsePerMille(input);
+      case 'per-myriad':
+        return this.parsePerMyriad(input);
+      case 'percent-point':
+        return this.parsePercentPoint(input);
       case 'unit':
         return this.parseDecimal(input);
       case 'decimal':
@@ -422,6 +445,54 @@ export class NumberParser {
       return bigResult.toNumber();
     } catch (error) {
       throw new Error('Failed to calculate per-mille');
+    }
+  }
+
+  /**
+   * 解析万分位格式
+   */
+  private parsePerMyriad(input: string): number {
+    const withoutPerMyriad = input.replace(perMyriadPattern, '').trim();
+
+    if (input === withoutPerMyriad) {
+      if (!this.options.strict) {
+        return this.parseDecimal(withoutPerMyriad);
+      }
+      throw new Error('Per-myriad symbol (‱) is required');
+    }
+
+    const decimal = this.parseDecimal(withoutPerMyriad);
+
+    try {
+      const bigDecimal = new Big(decimal);
+      const bigResult = bigDecimal.div(mathConstants.PER_MYRIAD_DIVISOR);
+      return bigResult.toNumber();
+    } catch (error) {
+      throw new Error('Failed to calculate per-myriad');
+    }
+  }
+
+  /**
+   * 解析百分点格式
+   */
+  private parsePercentPoint(input: string): number {
+    const withoutSuffix = input.replace(percentPointPattern, '').trim();
+
+    if (input === withoutSuffix) {
+      if (!this.options.strict) {
+        return this.parseDecimal(withoutSuffix);
+      }
+      throw new Error('Percent point suffix is required');
+    }
+
+    const decimal = this.parseDecimal(withoutSuffix);
+
+    try {
+      const bigDecimal = new Big(decimal);
+      const bigResult = bigDecimal.div(mathConstants.PERCENT_DIVISOR);
+      return bigResult.toNumber();
+    } catch (error) {
+      throw new Error('Failed to calculate percent point');
     }
   }
 
@@ -614,7 +685,9 @@ export class NumberParser {
     this.options = { ...this.options, ...options };
 
     // 处理 per-mille 样式的特殊情况
-    const formatterStyle = this.options.style === 'per-mille' ? 'decimal' : this.options.style;
+    const formatterStyle = DECIMAL_FALLBACK_STYLES.has(this.options.style)
+      ? 'decimal'
+      : this.options.style;
 
     this.formatter = new Intl.NumberFormat(this.options.locale, {
       style: formatterStyle,

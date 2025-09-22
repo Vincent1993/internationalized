@@ -2,7 +2,11 @@
  * Format 组件插件系统类型定义
  */
 
-export type ExtendedStyle = Intl.NumberFormatOptions['style'] | 'per-mille';
+export type ExtendedStyle =
+  | Intl.NumberFormatOptions['style']
+  | 'per-mille'
+  | 'per-myriad'
+  | 'percent-point';
 
 /**
  * 插件执行阶段

@@ -57,6 +57,34 @@ function createPerMilleTemplateHandler(): TemplateHandler {
   };
 }
 
+function createPerMyriadTemplateHandler(): TemplateHandler {
+  return (specifier) => {
+    const runtime = specifier as RuntimeFormatSpecifier;
+    const precision = readPrecision(runtime);
+    const trim = isTrimEnabled(runtime);
+
+    let options: UseFormatOptions = { style: 'per-myriad' };
+    if (precision !== undefined) {
+      options = applyFractionDigits(options, precision, trim);
+    }
+    return options;
+  };
+}
+
+function createPercentPointTemplateHandler(): TemplateHandler {
+  return (specifier) => {
+    const runtime = specifier as RuntimeFormatSpecifier;
+    const precision = readPrecision(runtime);
+    const trim = isTrimEnabled(runtime);
+
+    let options: UseFormatOptions = { style: 'percent-point' };
+    if (precision !== undefined) {
+      options = applyFractionDigits(options, precision, trim);
+    }
+    return options;
+  };
+}
+
 const perMilleTemplateIntegration: TemplatePluginRegistration = {
   plugin: 'per-mille',
   handlers: [
@@ -67,6 +95,28 @@ const perMilleTemplateIntegration: TemplatePluginRegistration = {
   ],
 };
 
+const perMyriadTemplateIntegration: TemplatePluginRegistration = {
+  plugin: 'per-myriad',
+  handlers: [
+    {
+      type: 'W',
+      handler: createPerMyriadTemplateHandler(),
+    },
+  ],
+};
+
+const percentPointTemplateIntegration: TemplatePluginRegistration = {
+  plugin: 'percent-point',
+  handlers: [
+    {
+      type: 'Q',
+      handler: createPercentPointTemplateHandler(),
+    },
+  ],
+};
+
 export const builtinTemplateIntegrations: readonly TemplatePluginRegistration[] = [
   perMilleTemplateIntegration,
+  perMyriadTemplateIntegration,
+  percentPointTemplateIntegration,
 ];

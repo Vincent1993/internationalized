@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   formatWithTemplate,
+  formatAsPerMyriad,
+  formatAsPercentPoint,
   resolveTemplateOptions,
   configureFormatTemplate,
   registerTemplateHandler,
@@ -29,6 +31,19 @@ describe('FP 模板格式化能力', () => {
   it('应该自动支持内置插件样式（per-mille）', () => {
     const formatted = formatWithTemplate('0.1P', 0.456, { locale: 'en-US' });
     expect(formatted).toBe('456.0‰');
+  });
+
+  it('应该支持万分位模板解析', () => {
+    const formatted = formatWithTemplate('0.2W', 0.1234, { locale: 'en-US' });
+    expect(formatted).toBe('1234.00‱');
+  });
+
+  it('应该支持百分点模板解析', () => {
+    const formatted = formatWithTemplate('0.1Q', 0.256, { locale: 'zh-CN' });
+    expect(formatted).toBe('25.6个百分点');
+
+    const { options } = resolveTemplateOptions('0.1Q');
+    expect(options.style).toBe('percent-point');
   });
 
   it('重置配置后仍应保留插件模板处理器', () => {
@@ -81,6 +96,22 @@ describe('FP 模板格式化能力', () => {
 
     const formatted = formatWithTemplate('Z', 0.25, { locale: 'en-US' });
     expect(formatted).toBe('250.00‰');
+  });
+
+  it('应该提供万分位和百分点的 FP 快捷函数', () => {
+    const perMyriad = formatAsPerMyriad(0.0123, {
+      locale: 'en-US',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    expect(perMyriad).toBe('123.00‱');
+
+    const percentPoint = formatAsPercentPoint(0.0456, {
+      locale: 'zh-CN',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+    expect(percentPoint).toBe('4.6个百分点');
   });
 });
 

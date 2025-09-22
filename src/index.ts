@@ -53,6 +53,8 @@ export {
   getRegisteredPlugins,
   getPluginInfo,
   perMillePluginGroup,
+  perMyriadPluginGroup,
+  percentPointPluginGroup,
   fallbackPlugin,
   createFallbackPlugin,
 } from './plugins';

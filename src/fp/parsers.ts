@@ -118,6 +118,23 @@ export function parsePerMille(input: string, options?: Omit<ParseOptions, 'style
 }
 
 /**
+ * 解析万分位格式的字符串
+ */
+export function parsePerMyriad(input: string, options?: Omit<ParseOptions, 'style'>): ParseResult {
+  return parseWithDefaults(input, options, { style: 'per-myriad' });
+}
+
+/**
+ * 解析百分点格式的字符串
+ */
+export function parsePercentPoint(
+  input: string,
+  options?: Omit<ParseOptions, 'style'>,
+): ParseResult {
+  return parseWithDefaults(input, options, { style: 'percent-point' });
+}
+
+/**
  * 解析紧凑格式的字符串
  * @param input 格式化后的紧凑字符串，如 "1.2M", "1.2万"
  * @param options 解析选项
@@ -179,8 +196,16 @@ export function parseAuto(input: string, options?: ParseOptions): ParseResult {
     return parsePercent(trimmed, options);
   }
 
+  if (trimmed.includes('‱')) {
+    return parsePerMyriad(trimmed, options);
+  }
+
   if (trimmed.includes('‰')) {
     return parsePerMille(trimmed, options);
+  }
+
+  if (/(个?百分点|個?百分點|pp)$/iu.test(trimmed)) {
+    return parsePercentPoint(trimmed, options);
   }
 
   if (/[E][+-]?\d+$/i.test(trimmed)) {
