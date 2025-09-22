@@ -1,14 +1,25 @@
 # FP 函数参考
 
-函数式 API 提供了与组件、Hook 同源的能力，但以纯函数形式暴露，更适用于 Node.js、服务端渲染或脚本化场景。所有函数均位于 `internationalized/fp` 入口，并默认采用 `zh-CN` 作为基础语言环境。【F:src/fp/index.ts†L1-L65】【F:src/fp/defaults.ts†L29-L95】
+函数式 API 将组件与 Hook 的能力抽象为纯函数，便于在 Node.js、服务端渲染或批处理脚本中直接使用。Monorepo 中提供两套入口：
 
-## 格式化函数
+- `@internationalized/number-format/fp`：面向数字的格式化、解析与模板工具。【F:packages/number-format/src/fp/index.ts†L1-L64】
+- `@internationalized/date-format/fp`：面向日期时间的格式化、区间处理与默认配置管理。【F:packages/date-format/src/fp/index.ts†L1-L34】
 
-每个格式化函数都分为字符串版本与 `Ex` 版本（返回 `UseFormatResult`），内部通过 `mergeOptionsWithDefaults` 合并默认配置、用户参数与强制选项，再复用缓存过的核心格式化器。【F:src/fp/formatters.ts†L5-L36】【F:src/fp/formatters.ts†L44-L240】【F:src/fp/defaults.ts†L210-L229】【F:src/fp/memoize.ts†L36-L90】
+## 数字格式化 API (`@internationalized/number-format/fp`)
+
+### 入口与默认配置
+
+所有函数共享同一套默认配置与缓存策略，可通过 `config()` 读取或更新，并使用 `resetDefaultConfigs()` 复原初始值。【F:packages/number-format/src/fp/defaults.ts†L6-L207】
+
+格式化器与解析器均会被缓存，避免重复创建 `Intl.NumberFormat` 或自定义 `NumberParser` 的开销，可通过 `clearFormatterCache`、`clearParserCache` 等方法清理。【F:packages/number-format/src/fp/memoize.ts†L36-L140】
+
+### 格式化函数
+
+格式化函数分为返回字符串的基础版本与返回 `UseFormatResult` 的 `Ex` 版本，内部使用 `mergeOptionsWithDefaults` 合并默认配置、用户参数与强制项，再复用缓存的核心格式化器。【F:packages/number-format/src/fp/formatters.ts†L5-L37】【F:packages/number-format/src/fp/formatters.ts†L44-L240】【F:packages/number-format/src/fp/defaults.ts†L209-L229】
 
 | 函数 | 描述 | 默认强制项 |
 |------|------|------------|
-| `formatAsDecimal` / `formatAsDecimalEx` | 十进制小数，保留默认 `style: 'decimal'` | `style: 'decimal'` |
+| `formatAsDecimal` / `formatAsDecimalEx` | 十进制小数 | `style: 'decimal'` |
 | `formatAsInteger` / `formatAsIntegerEx` | 四舍五入为整数并禁用小数位 | `style: 'decimal'`, `extend_fixDecimals: 0` |
 | `formatAsCurrency` / `formatAsCurrencyEx` | 输出带货币符号的值 | `style: 'currency'`, `currency`（必填） |
 | `formatAsPercent` / `formatAsPercentEx` | 百分比展示（内部倍率为 100） | `style: 'percent'` |
@@ -19,51 +30,79 @@
 | `formatAsCompact` / `formatAsCompactEx` | 紧凑记数法（1.2M、1.2万） | `style: 'decimal'`, `notation: 'compact'` |
 | `formatAsScientific` / `formatAsScientificEx` | 科学记数法 | `style: 'decimal'`, `notation: 'scientific'` |
 
-> 所有函数都支持 `extend_*` 扩展选项，例如 `extend_dynamicDecimals`、`extend_includeSign` 等，用于激活对应插件。【F:src/plugins/types.ts†L218-L226】【F:src/plugins/dynamic-decimals/index.ts†L94-L182】
+> 所有函数都支持 `extend_*` 扩展选项，例如 `extend_dynamicDecimals`、`extend_includeSign` 等，用于激活对应插件。【F:packages/number-format/src/plugins/types.ts†L218-L226】【F:packages/number-format/src/plugins/dynamic-decimals/index.ts†L94-L182】
 
-## 模板格式化
+### 模板格式化
 
-`formatWithTemplate` 与 `formatWithTemplateEx` 允许使用 `token|specifier` 语法描述格式化规则，并自动映射到上述函数的默认配置。详见 [模板字符串](../guide/templates.mdx) 一章。【F:src/fp/templates.ts†L246-L357】【F:src/fp/index.ts†L31-L62】
+`formatWithTemplate` / `formatWithTemplateEx` 支持使用 `token|specifier` 描述格式化规则，并自动映射到上述函数的默认配置，适合批量定义展示模板。【F:packages/number-format/src/fp/templates.ts†L246-L357】
 
-## 解析函数
+### 解析函数
 
-解析 API 与格式化函数一一对应，同样分为基础版本与自动检测：
+解析 API 与格式化函数一一对应，同样分为基础版本与自动检测 `parseAuto`，最终都复用同一个 `NumberParser` 实例。【F:packages/number-format/src/fp/parsers.ts†L6-L234】【F:packages/number-format/src/fp/memoize.ts†L92-L140】
 
-| 函数 | 描述 |
-|------|------|
-| `parseDecimal` / `parseInteger` | 解析十进制或整数表示，会自动处理千分位分隔符。【F:src/fp/parsers.ts†L28-L59】 |
-| `parseCurrency` | 根据货币符号或 ISO 代码解析金额，保留数值单位。【F:src/fp/parsers.ts†L61-L82】 |
-| `parsePercent` | 解析百分比字符串并转换为 0-1 之间的小数。【F:src/fp/parsers.ts†L84-L100】 |
-| `parsePerMille` / `parsePerMyriad` / `parsePercentagePoint` | 解析千分比、万分比、百分点，对尾部符号进行严格校验。【F:src/fp/parsers.ts†L102-L134】 |
-| `parseChineseUppercase` | 将中文大写数字还原为数值，支持负号与小数。【F:src/fp/parsers.ts†L124-L136】 |
-| `parseCompact` | 解析 `1.2M`、`1.2万` 等紧凑表示法。【F:src/fp/parsers.ts†L138-L156】 |
-| `parseScientific` | 解析科学记数法，保留指数信息。【F:src/fp/parsers.ts†L158-L176】 |
-| `parseAuto` | 自动判定输入格式，按顺序匹配百分比、千分比、万分比、百分点、科学记数、货币、紧凑和中文大写，最后回退到十进制解析。【F:src/fp/parsers.ts†L178-L234】 |
-
-所有解析函数最终调用同一个 `parseNumber`，并继承相同的插件与缓存机制，便于保持格式化/解析的一致性。【F:src/fp/parsers.ts†L6-L26】【F:src/fp/memoize.ts†L92-L140】
-
-## 缓存管理
-
-- `clearFormatterCache` / `clearParserCache` / `clearCache` / `clearAllFPCaches`：清理缓存，常用于测试或多租户场景。【F:src/fp/memoize.ts†L92-L140】
-- `getFPCacheStats`（内部使用）：查看缓存命中情况，可用于调试性能瓶颈。【F:src/fp/memoize.ts†L112-L140】
-
-## 默认配置
-
-使用 `config()` 读取或批量更新默认选项，`resetDefaultConfigs()` 恢复初始状态。默认值在各格式类型上统一设置为 `zh-CN`，并针对货币、比例、紧凑等场景预设常用的精度。更新时遵循“默认值 < 用户传参 < 强制覆盖”的优先级顺序。【F:src/fp/defaults.ts†L6-L208】
+### 使用示例
 
 ```ts twoslash
-import { config, formatAsCurrency } from 'internationalized/fp';
+import { config, formatAsCurrency, parseDecimal } from '@internationalized/number-format/fp';
 
 // 读取当前默认配置
 const defaults = config();
 
-// 全局更新货币默认货币符号与精度
+// 全局更新货币默认符号与精度
 config({
   currency: { currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 },
 });
 
 formatAsCurrency(1234.5, 'USD');
 //=> "$1,234.50"
+
+parseDecimal('1,234.50');
+//=> { value: 1234.5 }
 ```
 
-> 若需要同时控制模板默认货币或自定义 token，请结合 `configTemplates()` 与 `resetTemplateConfig()` 使用，以保持模板与直接函数调用的一致行为。【F:src/fp/templates.ts†L277-L357】
+## 日期时间格式化 API (`@internationalized/date-format/fp`)
+
+### 入口与缓存
+
+日期函数式入口提供与 React 组件同源的格式化能力，并针对常用场景内置默认配置，可通过 `config()` 与 `resetDefaultConfigs()` 管理。【F:packages/date-format/src/fp/defaults.ts†L6-L137】
+
+内部同样维护格式化器缓存，避免重复创建 `Intl.DateTimeFormat` 实例，并在首次写入时进行预热调用。【F:packages/date-format/src/fp/memoize.ts†L6-L75】
+
+### 格式化函数
+
+日期格式化函数遵循“基础版返回字符串、`Ex` 版返回 `UseDateFormatResult`”的模式，可选地复用 `date-fns` 的 `startOfDay`、`endOfDay` 等工具处理输入，再交给缓存的格式化器。【F:packages/date-format/src/fp/formatters.ts†L1-L136】【F:packages/date-format/src/fp/formatters.ts†L251-L328】【F:packages/date-format/src/utils/date.ts†L22-L60】
+
+| 函数 | 描述 | 说明 |
+|------|------|------|
+| `formatAsDate` / `formatAsDateEx` | 以 `dateStyle: 'short'` 输出日期 | 默认语言 `zh-CN`，可通过 `options.locale` 覆盖。【F:packages/date-format/src/fp/formatters.ts†L138-L150】 |
+| `formatAsTime` / `formatAsTimeEx` | 输出时间部分 | 使用 `timeStyle: 'short'`，支持覆盖时区。【F:packages/date-format/src/fp/formatters.ts†L152-L164】 |
+| `formatAsDateTime` / `formatAsDateTimeEx` | 日期 + 时间 | 适合日程类场景。【F:packages/date-format/src/fp/formatters.ts†L166-L184】 |
+| `formatAsDateTimeWithSeconds` / `formatAsDateTimeWithSecondsEx` | 含秒数的日期时间 | 使用 `timeStyle: 'medium'`。【F:packages/date-format/src/fp/formatters.ts†L186-L204】 |
+| `formatAsWeekday` / `formatAsWeekdayEx` | 输出星期文本 | 默认 `weekday: 'long'`。【F:packages/date-format/src/fp/formatters.ts†L206-L218】 |
+| `formatAsMonthDay` / `formatAsMonthDayEx` | 输出“X月X日” | 默认 `month: 'long'`。【F:packages/date-format/src/fp/formatters.ts†L220-L234】 |
+| `formatAsMonth` / `formatAsMonthEx` | 输出月份名称 | 便于统计或报表。【F:packages/date-format/src/fp/formatters.ts†L237-L248】 |
+| `formatAsStartOfDay` / `formatAsStartOfDayEx` | 将时间归一到日初再格式化 | 复用 `date-fns/startOfDay`。【F:packages/date-format/src/fp/formatters.ts†L251-L281】 |
+| `formatAsEndOfDay` / `formatAsEndOfDayEx` | 将时间归一到日末再格式化 | 复用 `date-fns/endOfDay`。【F:packages/date-format/src/fp/formatters.ts†L283-L313】 |
+| `formatDateRange` / `formatDateRangeEx` | 日期区间 | 自动排序区间两端，优先使用 `Intl.DateTimeFormat#formatRange`，回退到拼接字符串。【F:packages/date-format/src/fp/formatters.ts†L315-L328】 |
+
+### 默认配置与示例
+
+```ts twoslash
+import { config, formatAsDate, formatDateRange } from '@internationalized/date-format/fp';
+
+// 查看当前默认配置
+const defaults = config();
+
+// 将默认时区设置为上海
+config({
+  dateTime: { timeZone: 'Asia/Shanghai' },
+});
+
+formatAsDate('2024-05-20T08:30:00Z');
+//=> "2024/5/20"
+
+formatDateRange('2024-05-20', '2024-05-22', { timeZone: 'UTC' });
+//=> "2024/5/20 – 2024/5/22"
+```
+
+> 使用 `clearFormatterCache()` 可以在测试或多租户环境中重置缓存，确保不同请求之间的隔离。【F:packages/date-format/src/fp/memoize.ts†L63-L108】

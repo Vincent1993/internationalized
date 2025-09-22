@@ -37,7 +37,8 @@
     ".": "./src/index.ts",
     "./components": "./src/components/index.ts",
     "./hooks": "./src/hooks/index.ts",
-    "./core": "./src/core/index.ts"
+    "./core": "./src/core/index.ts",
+    "./fp": "./src/fp/index.ts"
   },
   "files": [
     "dist",
@@ -54,7 +55,7 @@
   },
   "scripts": {
     "test": "vitest",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest run --coverage",
     "lint": "rslint",
     "lint:fix": "rslint --fix",
     "typecheck": "tsc --noEmit",

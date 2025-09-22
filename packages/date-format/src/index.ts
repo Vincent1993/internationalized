@@ -17,3 +17,5 @@ export type {
   ResolvedDateFormatOptions,
   DateInput,
 } from './core';
+
+export * from './fp';
