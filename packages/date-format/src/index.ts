@@ -20,3 +20,5 @@ export type {
 
 export * from './fp';
 export * from './date-fns';
+
+export * from './utils/shortcuts';

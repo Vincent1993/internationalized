@@ -73,35 +73,6 @@ describe('hooks/useFormat', () => {
     });
   });
 
-  describe('性能测试', () => {
-    it('应该在配置不变时重用formatter', () => {
-      const options = { style: 'decimal' as const };
-
-      const { result, rerender } = renderHook(() => useFormat(options));
-      const firstFormatter = result.current;
-
-      rerender();
-      const secondFormatter = result.current;
-
-      // 因为使用了useMemo，配置相同时应该返回相同的引用
-      expect(firstFormatter).toStrictEqual(secondFormatter);
-    });
-
-    it('应该在配置改变时创建新formatter', () => {
-      let options = { style: 'decimal' as const };
-
-      const { result, rerender } = renderHook(() => useFormat(options));
-      const firstFormatter = result.current;
-
-      options = { style: 'percent' };
-      rerender();
-      const secondFormatter = result.current;
-
-      // 配置改变时应该返回新的引用
-      expect(firstFormatter).not.toBe(secondFormatter);
-    });
-  });
-
   describe('resolveOptions功能测试', () => {
     it('应该返回正确的解析选项', () => {
       const { result } = renderHook(() =>

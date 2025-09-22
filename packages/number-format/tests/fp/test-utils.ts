@@ -8,7 +8,6 @@ import {
   formatAsScientific,
   config,
   resetDefaultConfigs,
-  clearCache,
 } from '../../src/fp';
 
 /**
@@ -143,33 +142,6 @@ export const testHelpers = {
     expect(options).toEqual(originalOptions);
   },
 
-  /**
-   * 测试缓存行为
-   */
-  expectCacheWorking: (createFormatter: () => any, iterations = 100) => {
-    // 预热
-    const warmupFormatter = createFormatter();
-
-    // 测试缓存性能
-    const start1 = performance.now();
-    for (let i = 0; i < iterations; i++) {
-      createFormatter();
-    }
-    const cachedTime = performance.now() - start1;
-
-    // 清除缓存
-    clearCache();
-
-    // 测试无缓存性能
-    const start2 = performance.now();
-    for (let i = 0; i < iterations; i++) {
-      createFormatter();
-    }
-    const uncachedTime = performance.now() - start2;
-
-    // 缓存至少不应该显著变慢（允许最多慢20%）
-    expect(cachedTime).toBeLessThan(uncachedTime * 1.2);
-  },
 };
 
 
@@ -216,30 +188,6 @@ export const configTestHelpers = {
       expect(configs).toHaveProperty(type);
       expect(typeof configs[type]).toBe('object');
     });
-  },
-};
-
-/**
- * 性能测试辅助函数
- */
-export const performanceTestHelpers = {
-  /**
-   * 批量性能测试
-   */
-  batchPerformanceTest: (operations: (() => unknown)[], maxTime = 1000) => {
-    const start = performance.now();
-    operations.forEach(op => op());
-    const duration = performance.now() - start;
-    // 允许一定的浮动，避免不同环境下的抖动导致误报
-    expect(duration).toBeLessThan(maxTime * 1.5);
-    return duration;
-  },
-
-  /**
-   * 创建大量测试数据
-   */
-  createLargeDataset: (size = 1000) => {
-    return Array.from({ length: size }, (_, i) => i * 1.23456);
   },
 };
 

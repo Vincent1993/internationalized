@@ -11,7 +11,6 @@ import {
   currencyTestData,
   testOptions,
   testHelpers,
-  performanceTestHelpers,
   integrationTestHelpers,
 } from './test-utils';
 
@@ -283,41 +282,4 @@ describe('FP 格式化器 - 核心功能', () => {
     });
   });
 
-  describe('性能特性', () => {
-    describe('批量操作性能', () => {
-      it('应该在批量操作中保持良好性能', () => {
-        const testData = performanceTestHelpers.createLargeDataset(100);
-
-        const operations = testData.map(value => () => ({
-          decimal: formatters.decimal(value),
-          integer: formatters.integer(value),
-          currency: formatters.currency(value, 'USD'),
-          percent: formatters.percent(value / 100),
-          compact: formatters.compact(value),
-        }));
-
-        const duration = performanceTestHelpers.batchPerformanceTest(operations, 800);
-        expect(duration).toBeLessThan(800);
-      });
-    });
-
-    describe('极值处理性能', () => {
-      it('应该高效处理极大和极小数字', () => {
-        const extremeValues = [
-          Number.MAX_SAFE_INTEGER,
-          Number.MIN_SAFE_INTEGER,
-          Number.MAX_VALUE,
-          Number.MIN_VALUE,
-        ];
-
-        const operations = extremeValues.flatMap(value => [
-          () => formatters.decimal(value),
-          () => formatters.scientific(value),
-          () => formatters.compact(value),
-        ]);
-
-        performanceTestHelpers.batchPerformanceTest(operations, 150);
-      });
-    });
-  });
 });

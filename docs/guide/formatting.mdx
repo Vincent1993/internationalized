@@ -92,6 +92,29 @@ formatDateRange('2024-05-20', '2024-05-22', { timeZone: 'UTC' });
 
 FP 函数复用 `date-fns` 的 `startOfDay`、`endOfDay` 与区间排序逻辑，既适用于 Node.js，也可在浏览器脚本中直接调用。
 
+## 日期快捷工具
+
+> 📌 版本说明：`日期快捷函数` 自 **v0.1.0** 起提供。
+
+```ts
+import {
+  getTodayDate,
+  getTomorrowDate,
+  getDayAfterTomorrowDate,
+  getStartOfNextMonth,
+  getStartOfNextQuarter,
+} from '@internationalized/date-format';
+
+const today = getTodayDate();
+const tomorrow = getTomorrowDate();
+const dayAfterTomorrow = getDayAfterTomorrowDate();
+const nextMonthStart = getStartOfNextMonth();
+const nextQuarterStart = getStartOfNextQuarter();
+```
+
+- 所有函数均返回未经格式化的 `Date` 对象，便于继续进行运算或差异比较。
+- `getStartOfNextWeek` / `getStartOfPreviousWeek` 支持传入 `weekStartsOn`，以满足不同地区的周起始定义。
+
 ## 动态小数位控制
 
 通过 `extend_dynamicDecimals` 扩展选项，可以自动为极小的小数值提升精度，直到出现首个非零小数；若超出阈值，则回退到科学计数法：
@@ -136,5 +159,6 @@ registerNumberFormatPlugin({
 | `createNumberFormat` / `resolveFormatOptions` | v0.0.1 |
 | `createNumberParser` / `parseNumber` | v0.0.1 |
 | `DateFormat` / `useDateFormat` / `DateFormatProvider` | v0.0.1 |
+| `getTodayDate` / `getStartOfNextWeek` 等日期快捷函数 | v0.1.0 |
 
 > 📚 想要以配置字符串管理格式化规则？请继续阅读[模板字符串](./templates.mdx) 章节，了解如何通过 `formatWithTemplate` 统一驱动 FP 与插件能力。

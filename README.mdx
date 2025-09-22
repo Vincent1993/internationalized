@@ -558,8 +558,6 @@ registerPlugin(customPlugin);
 | 语法检查 | `pnpm lint` | ✅ RSLint 全量通过 |
 | 类型检查 | `pnpm typecheck` | ⚠️ 43 个历史类型告警待清理（命令保持非零退出便于跟踪） |
 
-> † 覆盖率统计会跳过 `FP 性能和缓存功能 > 性能优化 > 缓存应该提高重复调用的性能` 这一对执行时间敏感的性能用例，防止插桩引入的开销导致波动。
-
 GitHub Actions（见 `.github/workflows/ci.yml`）会在 push 与 Pull Request 时自动执行 `pnpm install` → `pnpm typecheck` → `pnpm test -- --run` → `pnpm test:coverage:ci`，保证远端 CI 状态与本地一致。
 
 ## ♻️ 缓存策略

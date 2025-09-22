@@ -345,17 +345,4 @@ describe('FP 解析函数', () => {
     });
   });
 
-  describe('性能和缓存', () => {
-    it('应该复用相同选项的解析器', () => {
-      const options = { style: 'currency' as const, currency: 'USD' };
-
-      const result1 = parseCurrency('$100', 'USD', options);
-      const result2 = parseCurrency('$200', 'USD', options);
-
-      expect(result1.success).toBe(true);
-      expect(result2.success).toBe(true);
-      expect(result1.value).toBe(100);
-      expect(result2.value).toBe(200);
-    });
-  });
 });

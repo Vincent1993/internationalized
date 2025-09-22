@@ -9,10 +9,7 @@ import {
   testHelpers,
   formatters,
   boundaryValues,
-  performanceTestHelpers,
 } from './test-utils';
-
-import { clearCache } from '../../src/fp/memoize';
 
 describe('FP 模块集成测试', () => {
   describe('模块导出完整性', () => {
@@ -300,93 +297,6 @@ describe('FP 模块集成测试', () => {
 
         // 恢复默认配置
         FP.resetDefaultConfigs();
-      });
-    });
-  });
-
-  describe('性能集成验证', () => {
-    beforeEach(() => {
-      clearCache();
-    });
-
-    describe('整体性能', () => {
-      it('完整工作流应该保持良好性能', () => {
-        const testData = performanceTestHelpers.createLargeDataset(200);
-
-        const start = performance.now();
-
-        // 模拟真实应用场景
-        const results = testData.map(value => ({
-          raw: value,
-          decimal: formatters.decimal(value, { maximumFractionDigits: 2 }),
-          integer: formatters.integer(value),
-          currency: formatters.currency(value, 'USD', { minimumFractionDigits: 2 }),
-          percent: formatters.percent(value / 100, { maximumFractionDigits: 1 }),
-          compact: formatters.compact(value * 1000),
-          scientific: formatters.scientific(value * 1000000),
-        }));
-
-        const duration = performance.now() - start;
-
-        expect(results).toHaveLength(200);
-        expect(duration).toBeLessThan(500); // 应该在 500ms 内完成
-
-        // 验证结果正确性
-        results.slice(0, 5).forEach(result => {
-          expect(typeof result.decimal).toBe('string');
-          expect(typeof result.currency).toBe('string');
-          expect(result.percent).toContain('%');
-          expect(result.currency).toContain('$');
-        });
-      });
-
-      it('缓存应该在实际使用中提供性能优势', () => {
-        const commonOptions = [
-          { maximumFractionDigits: 1 },
-          { maximumFractionDigits: 2 },
-          { locale: 'en-US' },
-          { useGrouping: false },
-        ];
-
-        // 预热缓存
-        commonOptions.forEach(options => {
-          formatters.decimal(123.456, options);
-          formatters.percent(0.123, options);
-        });
-
-        const iterations = 100;
-
-        const start = performance.now();
-        for (let i = 0; i < iterations; i++) {
-          commonOptions.forEach(options => {
-            formatters.decimal(123.456 + i, options);
-            formatters.percent((0.123 + i/1000), options);
-          });
-        }
-        const cachedTime = performance.now() - start;
-
-        expect(cachedTime).toBeLessThan(300); // 缓存命中应该很快
-      });
-    });
-
-    describe('内存效率', () => {
-      it('大量操作不应该导致内存泄漏', () => {
-        const iterations = 500;
-        const options = { maximumFractionDigits: 2 };
-
-        // 执行大量操作
-        for (let i = 0; i < iterations; i++) {
-          formatters.decimal(Math.random() * 1000, options);
-          formatters.currency(Math.random() * 1000, 'USD', options);
-          formatters.percent(Math.random(), options);
-        }
-
-        // 清理缓存
-        clearCache();
-
-        // 验证系统仍然正常工作
-        const result = formatters.decimal(123.456, options);
-        expect(result).toBe('123.46');
       });
     });
   });

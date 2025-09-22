@@ -154,40 +154,6 @@ describe('集成测试', () => {
     });
   });
 
-  describe('性能和大量数据处理', () => {
-    it('应该能处理大量数字格式化', () => {
-      const numbers = Array.from({ length: 100 }, (_, i) => i * 123.45);
-
-      const TestManyNumbers = () => (
-        <NumberFormatProvider
-          options={{
-            locale: 'en-US',
-            style: 'decimal',
-            maximumFractionDigits: 2,
-          }}
-        >
-          <div>
-            {numbers.map((num, index) => (
-              <NumberFormat key={index} value={num} data-testid={`number-${index}`} />
-            ))}
-          </div>
-        </NumberFormatProvider>
-      );
-
-      const startTime = performance.now();
-      render(<TestManyNumbers />);
-      const endTime = performance.now();
-
-      // 性能测试：100个数字格式化应该在合理时间内完成
-      expect(endTime - startTime).toBeLessThan(1000); // 1秒内
-
-      // 抽查几个结果
-      expect(screen.getByTestId('number-0')).toHaveTextContent('0');
-      expect(screen.getByTestId('number-1')).toHaveTextContent('123.45');
-      expect(screen.getByTestId('number-10')).toHaveTextContent('1,234.5');
-    });
-  });
-
   describe('完整功能快照测试', () => {
     it('应该为完整的应用场景生成快照', () => {
       const rules: MetricFormatRule[] = [

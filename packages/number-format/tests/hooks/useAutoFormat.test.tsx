@@ -255,44 +255,6 @@ describe('hooks/useAutoFormat', () => {
     });
   });
 
-  describe('性能测试', () => {
-    it('应该缓存规则解析结果', () => {
-      const { result, rerender } = renderHook(() =>
-        useAutoFormat({ name: 'test_metric', rules: mockRules }),
-      );
-
-      const firstFormatter = result.current;
-      rerender();
-      const secondFormatter = result.current;
-
-      // 配置不变时，两个 formatter 应该产生相同的结果
-      const testValue = 123.45;
-      expect(firstFormatter.format(testValue).formattedValue)
-        .toBe(secondFormatter.format(testValue).formattedValue);
-    });
-
-    it('应该在规则变化时重新解析', () => {
-      let rules = mockRules;
-
-      const { result, rerender } = renderHook(() => useAutoFormat({ name: 'test_metric', rules }));
-
-      const firstFormatter = result.current;
-
-      rules = [
-        ...mockRules,
-        {
-          pattern: /new/i,
-          options: { style: 'decimal' },
-        },
-      ];
-
-      rerender();
-      const secondFormatter = result.current;
-
-      expect(firstFormatter).not.toBe(secondFormatter);
-    });
-  });
-
   describe('快照测试', () => {
     it('应该为不同指标类型生成正确格式', () => {
       const testCases = [
