@@ -1,0 +1,99 @@
+{
+  "name": "@internationalized/number-format",
+  "version": "0.0.1",
+  "description": "数值格式化组件",
+  "keywords": [
+    "React",
+    "component"
+  ],
+  "author": "Vincent1993",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "publishConfig": {
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.mjs",
+    "exports": {
+      "./": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs"
+      },
+      "./plugins": {
+        "types": "./dist/plugins/index.d.ts",
+        "import": "./dist/plugins.mjs"
+      },
+      "./hooks": {
+        "types": "./dist/hooks/index.d.ts",
+        "import": "./dist/hooks.mjs"
+      },
+      "./core": {
+        "types": "./dist/core/index.d.ts",
+        "import": "./dist/core.mjs"
+      },
+      "./components": {
+        "types": "./dist/components/index.d.ts",
+        "import": "./dist/components.mjs"
+      },
+      "./fp": {
+        "types": "./dist/fp/index.d.ts",
+        "import": "./dist/fp.mjs"
+      }
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./fp": "./src/fp/index.ts",
+    "./core": "./src/core/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./plugins": "./src/plugins/index.ts"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.mdx"
+  ],
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "@internationalized/shared": "workspace:*",
+    "big.js": "^7.0.1",
+    "d3-format": "^3.1.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@rspress/plugin-twoslash": "2.0.0-beta.32",
+    "@rspress/plugin-typedoc": "2.0.0-beta.32",
+    "@types/big.js": "^6.2.2",
+    "postcss": "^8.5.6",
+    "rspress": "2.0.0-beta.21"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:ci": "vitest run --coverage --coverage.reporter=text-summary",
+    "lint": "rslint",
+    "lint:fix": "rslint --fix",
+    "typecheck": "tsc --noEmit",
+    "build": "rslib build",
+    "docs:dev": "rspress dev",
+    "docs:build": "rspress build",
+    "prepublishOnly": "pnpm run build"
+  },
+  "materials": {
+    "framework": "react",
+    "category": "component",
+    "platform": "pc",
+    "tags": [
+      "fe-bot"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vincent1993/internationalized",
+    "directory": "packages/number-format"
+  },
+  "bugs": "https://github.com/Vincent1993/internationalized/issues"
+}

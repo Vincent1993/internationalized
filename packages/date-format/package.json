@@ -1,0 +1,76 @@
+{
+  "name": "@internationalized/date-format",
+  "version": "0.0.1",
+  "description": "日期与时间格式化组件",
+  "keywords": [
+    "React",
+    "date",
+    "internationalization"
+  ],
+  "author": "Vincent1993",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "publishConfig": {
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.mjs",
+    "exports": {
+      "./": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs"
+      },
+      "./components": {
+        "types": "./dist/components/index.d.ts",
+        "import": "./dist/components.mjs"
+      },
+      "./hooks": {
+        "types": "./dist/hooks/index.d.ts",
+        "import": "./dist/hooks.mjs"
+      },
+      "./core": {
+        "types": "./dist/core/index.d.ts",
+        "import": "./dist/core.mjs"
+      },
+      "./date-fns": {
+        "types": "./dist/date-fns.d.ts",
+        "import": "./dist/date-fns.mjs"
+      }
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./core": "./src/core/index.ts",
+    "./fp": "./src/fp/index.ts",
+    "./date-fns": "./src/date-fns.ts"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "@internationalized/shared": "workspace:*",
+    "date-fns": "^4.1.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "rslint",
+    "lint:fix": "rslint --fix",
+    "typecheck": "tsc --noEmit",
+    "build": "rslib build",
+    "prepublishOnly": "pnpm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vincent1993/internationalized",
+    "directory": "packages/date-format"
+  },
+  "bugs": "https://github.com/Vincent1993/internationalized/issues"
+}

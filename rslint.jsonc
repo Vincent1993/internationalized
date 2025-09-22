@@ -1,17 +1,16 @@
-
 [
   {
-    // ignore files and folders for linting
-    "ignores": ["dist/**", "docs/**", "tests/**"],
+    "ignores": ["dist/**", "docs/**", "packages/**/dist/**"],
     "languageOptions": {
       "parserOptions": {
-        // Rslint will lint all files included in your typescript projects defined here
-        // support lint multi packages in monorepo
-        "project": ["./tsconfig.json"]
+        "project": [
+          "./packages/number-format/tsconfig.json",
+          "./packages/date-format/tsconfig.json"
+        ]
       }
     },
     "plugins": [
-      "@typescript-eslint" // will enable all implemented @typescript-eslint rules by default
+      "@typescript-eslint"
     ]
   }
 ]

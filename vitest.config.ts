@@ -2,24 +2,17 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['tests/setup.ts'],
-    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json'],
-      exclude: [
-        'node_modules/',
-        'src/__tests__/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        'dist/',
-        'src/**/types.ts',
-        'src/legacy.ts',
-        'tests/**/*.ts',
-      ],
-    },
+    projects: [
+      {
+        extends: './packages/number-format/vitest.config.ts',
+        name: 'number-format',
+        root: './packages/number-format',
+      },
+      {
+        extends: './packages/date-format/vitest.config.ts',
+        name: 'date-format',
+        root: './packages/date-format',
+      },
+    ],
   },
 });

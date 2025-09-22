@@ -1,0 +1,19 @@
+{
+  "name": "@internationalized/shared",
+  "version": "0.0.1",
+  "private": true,
+  "description": "国际化工具库内部共享模块",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./components/slot": "./src/components/Slot.tsx",
+    "./components/base": "./src/components/createBaseFormatComponent.tsx",
+    "./utils": "./src/utils/index.ts",
+    "./utils/memoize": "./src/utils/memoize.ts"
+  },
+  "files": [
+    "src"
+  ]
+}

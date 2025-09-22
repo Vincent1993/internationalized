@@ -1,11 +1,13 @@
 # 格式化能力
 
-`internationalized` 基于 `Intl.NumberFormat` 并扩展了插件机制，适用于多种业务场景。
+`@internationalized/number-format` 基于 `Intl.NumberFormat` 与插件机制，覆盖货币、比例、科学记数等多种场景；`@internationalized/date-format` 则结合 `date-fns` 预处理能力与 `Intl.DateTimeFormat`，统一日期时间的展示与区间逻辑。
 
-## 组件使用
+## 数字组件
+
+> 📌 版本说明：`NumberFormat` 自 **v0.0.1** 起提供。
 
 ```tsx
-import { NumberFormat } from 'internationalized';
+import { NumberFormat } from '@internationalized/number-format';
 
 <NumberFormat value={0.1234} style="percent" maximumFractionDigits={2} />;
 ```
@@ -13,10 +15,12 @@ import { NumberFormat } from 'internationalized';
 - `style` 支持 `decimal`、`currency`、`percent` 以及扩展插件样式（如 `per-mille`、`per-myriad`、`percentage-point`、`cn-upper`）。
 - 自动根据本地化规则输出千分位、货币符号和单位。
 
-## Hook
+## 数字 Hook
+
+> 📌 版本说明：`useFormat` 自 **v0.0.1** 起提供。
 
 ```tsx
-import { useFormat } from 'internationalized/hooks';
+import { useFormat } from '@internationalized/number-format/hooks';
 
 const { format } = useFormat({ style: 'currency', currency: 'CNY' });
 format(123456.789); // => "￥123,456.79"
@@ -24,10 +28,10 @@ format(123456.789); // => "￥123,456.79"
 
 Hook 在 React 中共享缓存配置，减少重复创建 `Intl.NumberFormat` 的开销。
 
-## 函数式 API
+## 数字函数式 API
 
 ```ts
-import { formatAsDecimal, formatAsCurrency } from 'internationalized/fp';
+import { formatAsDecimal, formatAsCurrency } from '@internationalized/number-format/fp';
 
 formatAsDecimal(1234.567, { maximumFractionDigits: 1 });
 formatAsCurrency(88.6, 'EUR');
@@ -35,12 +39,88 @@ formatAsCurrency(88.6, 'EUR');
 
 函数式入口便于在非 React 环境或服务端场景使用。
 
+> 📌 版本说明：`@internationalized/number-format/fp` 下的所有函数自 **v0.0.1** 起提供。
+
+## 日期组件
+
+`@internationalized/date-format` 提供与数字组件同构的 API，内部基于 `date-fns` 处理输入并复用 `Intl.DateTimeFormat`。
+
+> 📌 版本说明：`DateFormat` 与 `DateFormatProvider` 自 **v0.0.1** 起提供。
+
+```tsx
+import { DateFormat, DateFormatProvider } from '@internationalized/date-format';
+
+export function App() {
+  return (
+    <DateFormatProvider options={{ locale: 'zh-CN', timeZone: 'Asia/Shanghai' }}>
+      <section>
+        <h2>下一次会议</h2>
+        <DateFormat value={Date.now()} dateStyle="full" timeStyle="short" />
+      </section>
+    </DateFormatProvider>
+  );
+}
+```
+
+## 日期 Hook
+
+> 📌 版本说明：`useDateFormat` 自 **v0.0.1** 起提供。
+
+```tsx
+import { useDateFormat } from '@internationalized/date-format/hooks';
+
+const formatter = useDateFormat({
+  dateStyle: 'short',
+  timeStyle: 'short',
+  timeZone: 'Asia/Shanghai',
+});
+
+formatter.format('2024-05-20T08:00:00Z');
+```
+
+Hook 默认回退到 `zh-CN`，并在 context 中合并顶层 `DateFormatProvider` 的设定。
+
+## 日期函数式 API
+
+```ts
+import { formatAsDate, formatDateRange, formatAsStartOfDay } from '@internationalized/date-format/fp';
+
+formatAsDate('2024-05-20T08:30:00Z', { timeZone: 'UTC' });
+formatAsStartOfDay(Date.now(), { timeZone: 'Asia/Shanghai' });
+formatDateRange('2024-05-20', '2024-05-22', { timeZone: 'UTC' });
+```
+
+FP 函数复用 `date-fns` 的 `startOfDay`、`endOfDay` 与区间排序逻辑，既适用于 Node.js，也可在浏览器脚本中直接调用。
+
+## 日期快捷工具
+
+> 📌 版本说明：`日期快捷函数` 自 **v0.1.0** 起提供。
+
+```ts
+import {
+  getTodayDate,
+  getTomorrowDate,
+  getDayAfterTomorrowDate,
+  getStartOfNextMonth,
+  getStartOfNextQuarter,
+} from '@internationalized/date-format';
+
+const today = getTodayDate();
+const tomorrow = getTomorrowDate();
+const dayAfterTomorrow = getDayAfterTomorrowDate();
+const nextMonthStart = getStartOfNextMonth();
+const nextQuarterStart = getStartOfNextQuarter();
+```
+
+- 所有函数均返回未经格式化的 `Date` 对象，便于继续进行运算或差异比较。
+- `getStartOfNextWeek` / `getStartOfPreviousWeek` 支持传入 `weekStartsOn`，以满足不同地区的周起始定义。
+
 ## 动态小数位控制
 
 通过 `extend_dynamicDecimals` 扩展选项，可以自动为极小的小数值提升精度，直到出现首个非零小数；若超出阈值，则回退到科学计数法：
 
 ```tsx
-import { NumberFormat } from 'internationalized';
+import { NumberFormat } from '@internationalized/number-format';
 
 <NumberFormat
   value={0.00000031}
@@ -55,7 +135,7 @@ import { NumberFormat } from 'internationalized';
 通过插件可以轻松扩展新的格式化模式：
 
 ```ts
-import { registerNumberFormatPlugin } from 'internationalized/core';
+import { registerNumberFormatPlugin } from '@internationalized/number-format/core';
 
 registerNumberFormatPlugin({
   name: 'compact-metric',
@@ -69,5 +149,16 @@ registerNumberFormatPlugin({
 ```
 
 注册后即可在组件、Hook 与函数式 API 中共享。
+
+## API 首次支持版本速查
+
+| API | 首次支持版本 |
+| --- | --- |
+| `NumberFormat` / `AutoMetricNumber` | v0.0.1 |
+| `useFormat` / `useAutoFormat` / `useParse` | v0.0.1 |
+| `createNumberFormat` / `resolveFormatOptions` | v0.0.1 |
+| `createNumberParser` / `parseNumber` | v0.0.1 |
+| `DateFormat` / `useDateFormat` / `DateFormatProvider` | v0.0.1 |
+| `getTodayDate` / `getStartOfNextWeek` 等日期快捷函数 | v0.1.0 |
 
 > 📚 想要以配置字符串管理格式化规则？请继续阅读[模板字符串](./templates.mdx) 章节，了解如何通过 `formatWithTemplate` 统一驱动 FP 与插件能力。
