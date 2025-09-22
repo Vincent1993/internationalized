@@ -42,11 +42,27 @@ export default defineConfig({
           link: '/guide/formatting',
         },
         {
+          text: '模板字符串',
+          link: '/guide/templates',
+        },
+        {
           text: '集成与自动化',
           link: '/guide/tooling',
         },
       ],
       '/reference/': [
+        {
+          text: '架构总览',
+          link: '/reference/architecture',
+        },
+        {
+          text: '插件系统',
+          link: '/reference/plugins',
+        },
+        {
+          text: 'FP 函数参考',
+          link: '/reference/fp',
+        },
         {
           text: '解析输出说明',
           link: '/reference/parser',

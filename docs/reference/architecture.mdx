@@ -1,0 +1,40 @@
+# 架构总览
+
+`internationalized` 由 **核心格式化器**、**插件系统**、**React 上下文** 与 **函数式封装** 四层组成，围绕 `Intl.NumberFormat` 构建可扩展的格式化/解析管线。【F:src/core/formatter.ts†L1-L119】【F:src/plugins/registry.ts†L1-L120】【F:src/core/context.tsx†L1-L87】【F:src/fp/index.ts†L1-L65】
+
+## 核心格式化流水线
+
+1. **配置合并**：`createFormatterCore` 先合并默认配置、上下文配置与调用参数，得到最终的 `Intl.NumberFormatOptions`。（详见 `mergeOptionsWithDefaults` 与 `createNumberFormat` 源码。）【F:src/fp/defaults.ts†L210-L229】【F:src/core/formatter.ts†L404-L484】
+2. **插件预处理**：`applyFormatPlugins` 依次执行 `pre-process` 阶段的插件，可修改数值或选项（如 validator、动态小数位、比例放大）。【F:src/core/formatter.ts†L33-L119】【F:src/plugins/registry.ts†L21-L120】
+3. **基础格式化**：调用缓存的 `Intl.NumberFormat` 实例得到字符串及 `formatToParts` 结果。【F:src/core/formatter.ts†L356-L387】
+4. **后处理与异常兜底**：`format`、`post-process` 阶段插件可追加符号、处理中文大写、输出 fallback 文案；异常同样会走兜底流程，保证结果总是可展示。【F:src/core/formatter.ts†L371-L398】【F:src/plugins/fallback/index.ts†L1-L158】
+
+解析流程也遵循相同的思想：`parseNumber` 会加载解析插件，并根据样式还原倍率或去除自定义后缀，确保格式化/解析互逆。【F:src/fp/parsers.ts†L6-L26】【F:src/plugins/shared/constants.ts†L7-L78】
+
+## 插件注册与扩展
+
+插件注册表在初始化时自动加载内置插件组（validator、per-mille/per-myriad/percentage-point、中文大写、fallback、固定小数位、动态小数位），并提供注册、注销、启用、禁用等 API。【F:src/plugins/registry.ts†L1-L120】
+
+自定义插件建议在应用启动时通过 `registerPlugin` 或 `registerGroup` 注册，必要时使用 `resetPlugins` 重置，以便在测试或多租户环境中按需隔离。【F:src/plugins/registry.ts†L121-L220】
+
+## React 上下文与指标规则
+
+`NumberFormatProvider` 提供全局上下文，支持 locale、Intl 配置以及基于名称/正则的指标规则；多级 Provider 会自动合并规则数组，方便在不同模块下覆盖配置。【F:src/core/context.tsx†L1-L87】【F:src/core/types.ts†L1-L120】
+
+Hook（如 `useFormat`）和组件（如 `NumberFormat`、`AutoMetricNumber`）会读取上下文并复用同一套格式化流水线，因此与 FP API 共享缓存和插件行为。
+
+## 函数式 API 与缓存
+
+FP 入口 (`internationalized/fp`) 将核心能力封装为纯函数，默认复用 memoized 格式化器/解析器缓存，缓存键包含 locale、style 等关键选项，支持通过 `clearAllFPCaches` 等方法手动清理。【F:src/fp/index.ts†L1-L65】【F:src/fp/memoize.ts†L1-L140】
+
+`config()`、`resetDefaultConfigs()` 提供全局默认值管理；`createNumberFormat.defaults` 则允许为工厂函数设置额外的上下文默认配置，方便在服务端或批量处理场景复用实例。【F:src/fp/defaults.ts†L6-L208】【F:src/core/formatter.ts†L404-L512】
+
+## 模板层
+
+模板字符串为 FP 层提供了 declarative 接口：通过 `token|d3 specifier` 描述格式化需求后，系统会解析 token 与 specifier，匹配对应的默认配置、强制选项和插件行为，并可通过 `configTemplates` 自定义映射或默认货币。模板解析失败时会抛出带包信息的错误，便于快速定位问题。【F:src/fp/templates.ts†L158-L357】【F:src/utils/errors.ts†L1-L27】
+
+## 关键设计原则
+
+- **单一事实来源**：无论是组件、Hook、FP 还是模板，都会回落到同一个核心格式化器与插件体系，避免行为分叉。
+- **可组合扩展**：插件与模板配置都可以在运行时注册或调整，并配合缓存机制保证性能。
+- **默认中文本地化**：所有默认配置统一使用 `zh-CN`，满足国内业务场景，同时允许通过上下文或全局配置覆盖。【F:src/fp/defaults.ts†L29-L95】
