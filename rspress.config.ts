@@ -27,10 +27,6 @@ export default defineConfig({
       { text: '指南', link: '/guide/getting-started' },
       { text: '解析参考', link: '/reference/parser' },
       { text: 'API 参考', link: '/api/' },
-      {
-        text: 'GitHub',
-        link: 'https://github.com/Vincent1993/internationalized',
-      },
     ],
     sidebar: {
       '/guide/': [
@@ -73,7 +69,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: 'github',
-        mode: 'img',
+        mode: 'link',
         content: 'https://github.com/Vincent1993/internationalized',
       },
     ],
