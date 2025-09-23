@@ -1,0 +1,98 @@
+# 数字格式化包概览
+
+`@internationalized/number-format` 基于 `Intl.NumberFormat` 构建，可在 React、Node.js 以及脚本环境中统一复用组件、Hook 与函数式 API。
+
+## 模块地图
+
+| 模块 | 目录 | 说明 |
+|------|------|------|
+| Core | `packages/number-format/src/core` | 核心格式化与解析逻辑、上下文与工具函数 |
+| Plugins | `packages/number-format/src/plugins` | 插件注册中心及内置插件（千分比、异常兜底、校验、固定/动态小数位等） |
+| Components | `packages/number-format/src/components` | React 组件封装，含 `<NumberFormat>`、`<AutoMetricNumber>` 等 |
+| Hooks | `packages/number-format/src/hooks` | `useFormat`、`useParse`、`useAutoFormat` 等 React Hook |
+| FP APIs | `packages/number-format/src/fp` | 函数式调用入口与缓存机制 |
+| Tests | `packages/number-format/tests` | 覆盖核心逻辑、插件、组件与类型的测试套件 |
+
+> 💡 **迁移提示**：根入口不再导出 `Format` 遗留对象，如需保持旧版 API，请从 `@internationalized/number-format/legacy` 显式导入。
+
+## 目录结构速览
+
+```text
+packages/number-format/
+├── src/
+│   ├── core/           # 核心能力
+│   ├── plugins/        # 插件系统
+│   ├── components/     # React 组件
+│   ├── hooks/          # React Hooks
+│   ├── fp/             # 函数式 API
+│   └── index.ts        # 统一导出入口
+├── tests/              # 测试用例
+└── package.json        # 包信息与脚本
+```
+
+## 功能矩阵
+
+### 核心格式化
+
+| 功能分类 | 组件/Hook | FP 函数 | 描述 |
+|---------|----------|---------|------|
+| **基础格式化** | `<NumberFormat>` | `formatAsDecimal` | 标准数字格式化，支持千分位与小数位控制 |
+| **货币格式** | `<NumberFormat style="currency">` | `formatAsCurrency` | 多币种格式化，自动添加货币符号 |
+| **百分比格式** | `<NumberFormat style="percent">` | `formatAsPercent` | 百分比显示，自动转换数值范围 |
+| **千分比格式** | `<NumberFormat style="per-mille">` | `formatAsPerMille` | 千分比显示，使用 ‰ 符号 |
+| **万分比格式** | `<NumberFormat style="per-myriad">` | `formatAsPerMyriad` | 万分比/基点显示，使用 ‱ 符号 |
+| **百分点格式** | `<NumberFormat style="percentage-point">` | `formatAsPercentagePoint` | 百分点显示，使用 pp 后缀 |
+| **中文大写数字** | `<NumberFormat style="cn-upper">` | `formatAsChineseUppercase` | 将数字转换为中文大写 |
+| **紧凑格式** | `<NumberFormat notation="compact">` | `formatAsCompact` | 大数值紧凑显示（如 1.2M） |
+| **科学记数法** | `<NumberFormat notation="scientific">` | `formatAsScientific` | 科学记数法格式（如 1.23E3） |
+| **整数格式** | - | `formatAsInteger` | 强制整数显示并自动四舍五入 |
+
+### 解析能力
+
+| 功能分类 | Hook | FP 函数 | 描述 |
+|---------|------|---------|------|
+| **基础解析** | `useParse` | `parseDecimal` | 将格式化字符串解析回数字 |
+| **货币解析** | `useParse` | `parseCurrency` | 解析货币格式字符串 |
+| **百分比解析** | `useParse` | `parsePercent` | 解析百分比格式字符串 |
+| **千分比解析** | `useParse` | `parsePerMille` | 解析千分比格式字符串 |
+| **万分比解析** | `useParse` | `parsePerMyriad` | 解析万分比/基点字符串 |
+| **百分点解析** | `useParse` | `parsePercentagePoint` | 解析百分点 (pp) 字符串 |
+| **中文大写解析** | `useParse` | `parseChineseUppercase` | 解析中文大写数字字符串 |
+| **智能解析** | `useAutoParse` | `parseAuto` | 自动检测格式并解析 |
+
+### 高级特性
+
+| 功能分类 | 组件/Hook | 配置方式 | 描述 |
+|---------|----------|----------|------|
+| **全局配置** | `<NumberFormatProvider>` | Provider | 应用级默认配置管理 |
+| **智能规则** | `<AutoMetricNumber>` | `rules` 属性 | 基于名称/正则自动匹配格式 |
+| **异常兜底** | 内置插件 | `registerPlugin` | 处理 null、NaN、Infinity 等 |
+| **固定小数位** | `extend_fixDecimals` | 扩展选项 | 强制设置小数位数 |
+| **动态小数位** | `extend_dynamicDecimals` | 扩展选项 | 自动扩展小数位并支持科学计数法回退 |
+| **性能缓存** | 自动 | `clearCache` | 格式化器与解析器自动缓存 |
+| **FP 全局配置** | - | `config()` | 函数式风格的全局配置 |
+| **多态组件** | `as` 属性 | HTML 元素 | 渲染为不同标签 |
+| **函数式渲染** | `children` 函数 | Render Props | 自定义渲染逻辑 |
+
+### 类型一览
+
+| 类型 | 描述 | 示例 |
+|------|------|------|
+| `UseNumberFormatResult` | 格式化结果 | `{ formattedValue, parts, sign, isNaN }` |
+| `NumberFormatTemplate` | 模板字符串类型 | `'currency|$.2f'` |
+| `NumberFormatPlugin` | 插件定义 | `{ name, stages, resolve }` |
+
+## 模板字符串
+
+`formatWithTemplate` 支持直接复用 `d3-format` 风格的模板体验，并自动映射到内部的 `Intl` 配置：
+
+```ts
+import { formatWithTemplate } from '@internationalized/number-format/fp';
+
+formatWithTemplate('currency|$.2f', 1234.56); // => "￥1,234.56"
+formatWithTemplate('per-mille|.1%', 0.258); // => "258.0‰"
+formatWithTemplate('cn-upper', 1024); // => "壹仟零贰拾肆"
+```
+
+> 📚 更多扩展示例与插件列表可参阅[模板字符串](./templates.mdx)与[插件系统](/reference/plugins)。
+

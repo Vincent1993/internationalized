@@ -23,16 +23,22 @@ corepack prepare pnpm@10.13.1 --activate
 pnpm install
 ```
 
-如果你想将 `internationalized` 集成到已有项目，只需在目标项目运行：
+如果你想在已有项目中使用数字格式化能力，只需在目标项目运行：
 
 ```bash
-pnpm add internationalized
+pnpm add @internationalized/number-format
+```
+
+而日期时间格式化能力位于独立的 `@internationalized/date-format` 包中，可按需安装：
+
+```bash
+pnpm add @internationalized/date-format
 ```
 
 ## 基本示例
 
 ```tsx
-import { NumberFormat } from 'internationalized';
+import { NumberFormat } from '@internationalized/number-format';
 
 export function SalesHighlight() {
   return (
@@ -46,4 +52,5 @@ export function SalesHighlight() {
 ## 下一步
 
 - 阅读[格式化能力](./formatting.mdx)了解更多选项和插件。
+- 深入[数字格式化包概览](./number-format.mdx)与[日期格式化包概览](./date-format.mdx)，查看模块地图和能力矩阵。
 - 查看[解析输出说明](/reference/parser)掌握解析结果中的符号标记。

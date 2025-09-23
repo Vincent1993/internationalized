@@ -39,6 +39,14 @@ export default defineConfig({
           link: '/guide/formatting',
         },
         {
+          text: '数字格式化包概览',
+          link: '/guide/number-format',
+        },
+        {
+          text: '日期格式化包概览',
+          link: '/guide/date-format',
+        },
+        {
           text: '模板字符串',
           link: '/guide/templates',
         },

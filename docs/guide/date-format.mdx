@@ -1,0 +1,83 @@
+# 日期格式化包概览
+
+`@internationalized/date-format` 结合 `date-fns` 与 `Intl.DateTimeFormat`，提供统一的组件、Hook、函数式 API 以及常用日期快捷工具。
+
+## 模块地图
+
+| 模块 | 目录 | 说明 |
+|------|------|------|
+| Core | `packages/date-format/src/core` | 创建 `Intl.DateTimeFormat` 实例、上下文合并与区间格式化 |
+| Components | `packages/date-format/src/components` | React 组件 `<DateFormat>` 及基础渲染逻辑 |
+| Hooks | `packages/date-format/src/hooks` | `useDateFormat`、`useDateFormatContext` 等 Hook |
+| FP APIs | `packages/date-format/src/fp` | 纯函数入口、默认配置与缓存控制 |
+| Utils | `packages/date-format/src/utils` | 时区工具、快捷日期函数、错误提示 |
+| Tests | `packages/date-format/tests` | 核心、组件、FP 与类型测试套件 |
+
+## 目录结构速览
+
+```text
+packages/date-format/
+├── src/
+│   ├── core/           # 格式化核心与上下文
+│   ├── components/     # React 组件
+│   ├── hooks/          # React Hooks
+│   ├── fp/             # 函数式 API
+│   ├── utils/          # 工具方法与快捷日期
+│   ├── date-fns.ts     # `date-fns` 复用入口
+│   └── index.ts        # 统一导出
+├── tests/              # 测试用例
+└── package.json        # 包信息与脚本
+```
+
+## 核心能力
+
+- **日期/时间组件**：`<DateFormat>` 支持 `dateStyle`、`timeStyle`、`timeZone` 等 `Intl.DateTimeFormat` 选项，能够直接在 React 中展示本地化文案。
+- **上下文合并**：`DateFormatProvider` 按层级合并 locale、时区与默认选项，Hook 与组件共享同一套配置。
+- **函数式 API**：`formatAsDate`、`formatAsDateTime`、`formatDateRange` 等函数便于在服务端、脚本或测试中复用。
+- **默认配置管理**：`config()`、`updateDefaultConfig()` 与 `resetDefaultConfigs()` 允许针对不同 locale 维护一组默认格式化选项。
+- **缓存与统计**：FP 层提供 `clearFormatterCache()`、`getFPCacheStats()` 等工具观察缓存命中率或进行重置。
+- **快捷日期函数**：`getTodayDate`、`getStartOfNextWeek` 等函数使用 `date-fns` 衍生常见日期节点，返回 `Date` 对象以便进一步运算。
+
+## 常用模式
+
+```tsx
+import { DateFormat, DateFormatProvider } from '@internationalized/date-format';
+
+export function NextMeeting() {
+  return (
+    <DateFormatProvider options={{ locale: 'zh-CN', timeZone: 'Asia/Shanghai' }}>
+      <DateFormat value={Date.now()} dateStyle="full" timeStyle="short" />
+    </DateFormatProvider>
+  );
+}
+```
+
+```ts
+import { formatAsDateTimeWithSeconds, formatDateRange } from '@internationalized/date-format/fp';
+
+formatAsDateTimeWithSeconds('2024-05-20T08:30:00Z', { timeZone: 'UTC' });
+formatDateRange('2024-05-20', '2024-05-22', { timeZone: 'Asia/Shanghai' });
+```
+
+```ts
+import { getStartOfNextMonth, getDayBeforeYesterdayDate } from '@internationalized/date-format';
+
+const nextMonth = getStartOfNextMonth();
+const dayBeforeYesterday = getDayBeforeYesterdayDate();
+```
+
+## 能力速查表
+
+| 功能分类 | API | 描述 |
+|---------|-----|------|
+| **基础格式化** | `<DateFormat>` / `formatAsDate` | 应用 `dateStyle: 'short'` 等快速输出日期 |
+| **时间格式** | `<DateFormat timeStyle>` / `formatAsTime` | 输出时间段，支持覆盖时区 |
+| **日期时间** | `<DateFormat dateStyle timeStyle>` / `formatAsDateTime` | 同时展示日期与时间 |
+| **含秒精度** | `formatAsDateTimeWithSeconds` | 使用 `timeStyle: 'medium'` 包含秒数 |
+| **星期与月份** | `formatAsWeekday` / `formatAsMonthDay` / `formatAsMonth` | 输出星期文本或「X月X日」样式 |
+| **日期区间** | `<DateFormat value={[start, end]}>` / `formatDateRange` | 优先使用 `Intl.DateTimeFormat#formatRange`，回退拼接字符串 |
+| **日初/日末** | `formatAsStartOfDay` / `formatAsEndOfDay` | 借助 `date-fns` 将时间归一后再格式化 |
+| **快捷日期** | `getTodayDate`、`getStartOfNextWeek` 等 | 快速获得常见日期节点 |
+
+> 📚 想了解 FP 层函数、默认配置与缓存详情？请继续阅读[FP 函数参考](/reference/fp)。
+
