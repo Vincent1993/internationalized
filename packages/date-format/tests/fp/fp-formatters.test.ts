@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { startOfDay as dateFnsStartOfDay } from 'date-fns';
 import {
   formatAsDate,
   formatAsDateEx,
@@ -43,7 +44,7 @@ describe('日期函数式 API', () => {
   it('应该复用 date-fns 的 startOfDay 调整到日初', () => {
     const result = formatAsStartOfDayEx(SAMPLE_DATE, { timeZone: 'UTC' });
 
-    expect(result.date?.toISOString()).toBe('2024-05-20T00:00:00.000Z');
+    expect(result.date?.getTime()).toBe(dateFnsStartOfDay(SAMPLE_DATE).getTime());
     expect(result.formattedValue).toBe('2024/5/20 00:00');
   });
 
@@ -71,8 +72,9 @@ describe('日期函数式 API', () => {
   });
 
   it('应该直接从包入口二次导出 date-fns 的 startOfDay', () => {
-    const normalized = exportedStartOfDay(new Date('2024-05-20T18:00:00Z'));
+    const input = new Date('2024-05-20T18:00:00Z');
+    const normalized = exportedStartOfDay(input);
 
-    expect(normalized.toISOString()).toBe('2024-05-20T00:00:00.000Z');
+    expect(normalized.getTime()).toBe(dateFnsStartOfDay(input).getTime());
   });
 });
