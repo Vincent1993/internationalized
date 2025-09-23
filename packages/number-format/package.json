@@ -64,11 +64,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
-    "@rspress/plugin-twoslash": "2.0.0-beta.32",
-    "@rspress/plugin-typedoc": "2.0.0-beta.32",
-    "@types/big.js": "^6.2.2",
-    "postcss": "^8.5.6",
-    "rspress": "2.0.0-beta.21"
+    "@types/big.js": "^6.2.2"
   },
   "scripts": {
     "test": "vitest",
@@ -78,17 +74,7 @@
     "lint:fix": "rslint --fix",
     "typecheck": "tsc --noEmit",
     "build": "rslib build",
-    "docs:dev": "rspress dev",
-    "docs:build": "rspress build",
     "prepublishOnly": "pnpm run build"
-  },
-  "materials": {
-    "framework": "react",
-    "category": "component",
-    "platform": "pc",
-    "tags": [
-      "fe-bot"
-    ]
   },
   "repository": {
     "type": "git",
